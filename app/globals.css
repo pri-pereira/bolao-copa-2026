@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #07060f;
+  --bg-rgb: 7, 6, 15;
+  --primary: #a3e635; /* Lime neon */
+  --primary-rgb: 163, 230, 53;
+  --secondary: #ff5e1a; /* Orange neon */
+  --secondary-rgb: 255, 94, 26;
+  --accent: #8b5cf6; /* Electric purple */
+  --accent-rgb: 139, 92, 246;
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-card: rgba(13, 11, 28, 0.65);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
+}
+
+body {
+  background: var(--bg);
+  background-image: 
+    radial-gradient(at 10% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+    radial-gradient(at 90% 10%, rgba(163, 230, 53, 0.12) 0px, transparent 50%),
+    radial-gradient(at 50% 80%, rgba(255, 94, 26, 0.08) 0px, transparent 50%);
+  background-attachment: fixed;
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Tipografia display super moderna e de impacto */
+.font-display {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+/* Remover setas de input de número */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Componentes de formulário modernizados */
+input, select, textarea {
+  background: rgba(10, 8, 22, 0.6);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+input:focus, select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 20px rgba(163, 230, 53, 0.25);
+  background: rgba(10, 8, 22, 0.85);
+}
+
+input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* Classes utilitárias premium */
+.glass-panel {
+  background: var(--surface-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glow-primary {
+  box-shadow: 0 0 30px rgba(163, 230, 53, 0.3);
+}
+
+.glow-secondary {
+  box-shadow: 0 0 30px rgba(255, 94, 26, 0.3);
+}
+
+.text-gradient-neon {
+  background: linear-gradient(135deg, #a3e635 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-orange {
+  background: linear-gradient(135deg, #ff5e1a 0%, #facc15 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Estilo para barra de rolagem */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
