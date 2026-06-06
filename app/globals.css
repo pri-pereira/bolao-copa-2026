@@ -132,28 +132,39 @@ input::placeholder {
 /* ───────────────────────────────────────────────────────────── */
 
 html.light {
-  --bg: #f8fafc; /* Slate 50 */
-  --bg-rgb: 248, 250, 252;
-  --primary: #059669; /* Emerald 600 */
-  --primary-rgb: 5, 150, 105;
-  --lime-primary: #047857; /* Emerald 700 */
+  --bg: #143f2e; /* Slate 50 */
+  --bg-rgb: 20, 63, 46;
+  --primary: #15803d; /* Emerald 600 */
+  --primary-rgb: 21, 128, 61;
+  --lime-primary: #166534; /* Emerald 700 */
   --primary-text: #ffffff;
-  --secondary: #ea580c; /* Orange 600 */
-  --accent: #7c3aed; /* Violet 600 */
+  --secondary: #c2410c; /* Orange 600 */
+  --accent: #6d28d9; /* Violet 600 */
   --surface: rgba(15, 23, 42, 0.03);
   --surface-hover: rgba(15, 23, 42, 0.06);
-  --surface-card: rgba(255, 255, 255, 0.82);
-  --border: rgba(15, 23, 42, 0.08);
-  --border-hover: rgba(15, 23, 42, 0.14);
+  --surface-card: rgba(255, 255, 255, 0.9);
+  --border: rgba(15, 23, 42, 0.1);
+  --border-hover: rgba(15, 23, 42, 0.18);
 }
 
-/* Redefinição do gradiente de estádio difuso no tema claro */
+/* Redefinição do fundo para gramado de campo de futebol no tema claro */
 html.light body {
+  background-color: #143f2e; /* Verde escuro base */
   background-image: 
-    radial-gradient(at 10% 20%, rgba(124, 58, 237, 0.05) 0px, transparent 50%),
-    radial-gradient(at 90% 10%, rgba(16, 185, 129, 0.04) 0px, transparent 50%),
-    radial-gradient(at 50% 80%, rgba(234, 88, 12, 0.03) 0px, transparent 50%);
+    /* Listras verticais alternadas de verde de campo de futebol */
+    linear-gradient(90deg, #103c2b 50%, #164734 50%),
+    /* Efeito de iluminação de holofotes no topo */
+    radial-gradient(circle at 50% 0%, rgba(74, 222, 128, 0.15) 0%, transparent 75%),
+    /* Sombra suave no rodapé */
+    radial-gradient(circle at 50% 100%, rgba(6, 78, 59, 0.2) 0%, transparent 75%);
+  background-size: 160px 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
   color: #0f172a; /* Slate 900 */
+}
+
+/* Suavizar grade futurista no tema claro */
+html.light .pointer-events-none.fixed.inset-0 {
+  opacity: 0.015 !important;
 }
 
 /* Sobrescrita dinâmica das classes brancas do Tailwind no tema claro */
@@ -198,34 +209,137 @@ html.light .text-white\/10 {
 }
 
 html.light .border-white\/5 {
-  border-color: rgba(15, 23, 42, 0.05) !important;
+  border-color: rgba(15, 23, 42, 0.06) !important;
 }
 html.light .border-white\/10 {
-  border-color: rgba(15, 23, 42, 0.09) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
 }
 html.light .border-white\/15 {
-  border-color: rgba(15, 23, 42, 0.13) !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
 }
 html.light .border-white\/20 {
-  border-color: rgba(15, 23, 42, 0.18) !important;
+  border-color: rgba(15, 23, 42, 0.24) !important;
 }
 
 html.light .bg-white\/5 {
-  background-color: rgba(15, 23, 42, 0.03) !important;
+  background-color: rgba(15, 23, 42, 0.04) !important;
 }
 html.light .bg-white\/10 {
-  background-color: rgba(15, 23, 42, 0.06) !important;
+  background-color: rgba(15, 23, 42, 0.08) !important;
 }
 
-/* Mapeamento de Painéis Transparentes Glassmorphism */
+/* Sobrescrita de classes de cores fluorescentes ou de baixo contraste no tema claro */
+html.light .text-lime-400 {
+  color: #15803d !important; /* Verde folha escuro legível */
+}
+html.light .text-lime-300 {
+  color: #166534 !important; /* Verde escuro legível */
+}
+html.light .text-lime-500 {
+  color: #14532d !important;
+}
+html.light .text-emerald-400 {
+  color: #047857 !important; /* Verde esmeralda legível */
+}
+html.light .text-emerald-300 {
+  color: #065f46 !important;
+}
+html.light .text-emerald-500 {
+  color: #065f46 !important;
+}
+html.light .text-amber-300 {
+  color: #b45309 !important; /* Amber legível */
+}
+html.light .text-amber-400 {
+  color: #9a3412 !important;
+}
+html.light .text-red-400 {
+  color: #b91c1c !important; /* Vermelho legível */
+}
+html.light .text-slate-300 {
+  color: #475569 !important; /* Slate para medalha de 2º lugar */
+}
+
+/* Gradientes no tema claro */
+html.light .text-gradient-neon {
+  background: linear-gradient(135deg, #15803d 0%, #064e3b 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html.light .text-gradient-orange {
+  background: linear-gradient(135deg, #c2410c 0%, #7c2d12 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Forçar textos brancos em botões de destaque no tema claro */
+html.light .bg-lime-400,
+html.light .bg-amber-500,
+html.light .bg-gradient-to-r.from-lime-400.to-emerald-500,
+html.light .bg-gradient-to-br.from-lime-400.to-emerald-500 {
+  color: #ffffff !important;
+}
+html.light .bg-lime-400 {
+  background-color: #15803d !important;
+}
+html.light .bg-amber-500 {
+  background-color: #d97706 !important;
+}
+html.light .bg-gradient-to-r.from-lime-400.to-emerald-500,
+html.light .bg-gradient-to-br.from-lime-400.to-emerald-500 {
+  background: linear-gradient(135deg, #15803d 0%, #047857 100%) !important;
+}
+
+/* Badges e alertas no tema claro */
+html.light .bg-amber-500\/10 {
+  background-color: rgba(217, 119, 6, 0.12) !important;
+}
+html.light .border-amber-500\/20 {
+  border-color: rgba(217, 119, 6, 0.25) !important;
+}
+html.light .bg-amber-500\/5 {
+  background-color: rgba(217, 119, 6, 0.08) !important;
+}
+html.light .border-amber-500\/10 {
+  border-color: rgba(217, 119, 6, 0.18) !important;
+}
+html.light .bg-lime-400\/10 {
+  background-color: rgba(22, 163, 74, 0.12) !important;
+}
+html.light .border-lime-400\/25 {
+  border-color: rgba(22, 163, 74, 0.25) !important;
+}
+html.light .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+html.light .border-emerald-500\/25 {
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+html.light .bg-red-500\/10 {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+}
+html.light .border-red-500\/10 {
+  border-color: rgba(239, 68, 68, 0.22) !important;
+}
+
+/* Destaque "Você" e pódio */
+html.light .border-lime-400\/40 {
+  border-color: rgba(21, 128, 61, 0.35) !important;
+}
+html.light .bg-lime-400\/5,
+html.light .bg-lime-400\/\[0\.04\] {
+  background-color: rgba(22, 163, 74, 0.06) !important;
+}
+
+/* Painéis Transparentes Glassmorphism com fundo branco opaco reforçado no claro */
 html.light .glass-panel {
-  background: rgba(255, 255, 255, 0.78);
-  border-color: rgba(15, 23, 42, 0.07);
-  box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.05);
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08) !important;
 }
 html.light .glass-panel:hover {
-  border-color: rgba(15, 23, 42, 0.13);
-  box-shadow: 0 12px 40px 0 rgba(15, 23, 42, 0.08);
+  border-color: rgba(15, 23, 42, 0.18) !important;
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.12) !important;
 }
 
 /* Adaptação de fundos específicos */
@@ -233,10 +347,10 @@ html.light .bg-\[\#0a0816\] {
   background-color: #f1f5f9 !important; /* Slate 100 */
 }
 html.light .bg-\[\#07060f\] {
-  background-color: #f8fafc !important; /* Slate 50 */
+  background-color: #143f2e !important; /* Gramado verde */
 }
 html.light .bg-black\/40 {
-  background-color: rgba(15, 23, 42, 0.03) !important;
+  background-color: rgba(15, 23, 42, 0.04) !important;
 }
 html.light .bg-black\/75 {
   background-color: rgba(255, 255, 255, 0.75) !important;
@@ -245,23 +359,29 @@ html.light .bg-black\/75 {
 
 /* Mapeamento de formulários */
 html.light input, html.light select, html.light textarea {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  color: #0f172a;
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.2) !important;
+  color: #0f172a !important;
 }
 html.light input:focus, html.light select:focus {
-  background: #ffffff;
-  border-color: var(--primary);
-  box-shadow: 0 0 15px rgba(5, 150, 105, 0.15);
+  background: #ffffff !important;
+  border-color: #15803d !important;
+  box-shadow: 0 0 15px rgba(21, 128, 61, 0.2) !important;
 }
 html.light input::placeholder {
-  color: rgba(15, 23, 42, 0.4);
+  color: rgba(15, 23, 42, 0.45) !important;
 }
 
-/* Modificações estéticas para os botões do tema claro */
-html.light .bg-gradient-to-r.from-lime-400.to-emerald-500 {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
-  color: #ffffff !important;
+/* Ajustes de botões secundários no tema claro */
+html.light button.shrink-0 {
+  background-color: rgba(15, 23, 42, 0.05) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  color: rgba(15, 23, 42, 0.7) !important;
+}
+html.light button.shrink-0:hover {
+  background-color: rgba(15, 23, 42, 0.1) !important;
+  border-color: #15803d !important;
+  color: #15803d !important;
 }
 
 /* Ajustes de responsividade móvel extrema para BottomNav e Steppers */

@@ -73,13 +73,13 @@ export function DateTimeClock() {
   }
 
   return (
-    <div className="flex flex-col items-end gap-0.5 bg-white/5 border border-white/5 px-3 py-1.5 rounded-xl backdrop-blur-md select-none shrink-0">
-      <div className="flex items-center gap-1.5 text-lime-400 font-display text-lg tracking-wider font-extrabold">
-        <Clock size={15} className="animate-pulse shrink-0" />
+    <div className="flex flex-col items-end gap-0.5 bg-white/5 border border-white/5 px-4 py-2 rounded-xl backdrop-blur-md select-none shrink-0">
+      <div className="flex items-center gap-2 text-lime-400 font-display text-xl tracking-wider font-extrabold">
+        <Clock size={18} className="animate-pulse shrink-0" />
         <span>{time}</span>
       </div>
-      <div className="text-[10px] text-white/40 font-bold uppercase tracking-wider">
-        {date} <span className="text-[9px] bg-lime-400/10 text-lime-300 px-1 py-0.2 rounded ml-0.5">DF</span>
+      <div className="text-xs text-white/40 font-bold uppercase tracking-wider">
+        {date} <span className="text-[10px] bg-lime-400/10 text-lime-300 px-1.5 py-0.5 rounded ml-0.5">DF</span>
       </div>
     </div>
   );

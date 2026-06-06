@@ -165,15 +165,27 @@ function MatchCard({ match: m, pick, onSave }) {
 
   const [a, setA] = useState(pick?.score_a ?? 0);
   const [b, setB] = useState(pick?.score_b ?? 0);
-  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [isEditing, setIsEditing] = useState(!pick);
 
-  useEffect(() => { setA(pick?.score_a ?? 0); setB(pick?.score_b ?? 0); }, [pick]);
+  useEffect(() => { 
+    setA(pick?.score_a ?? 0); 
+    setB(pick?.score_b ?? 0); 
+    setIsEditing(!pick);
+  }, [pick]);
 
   const pts = m.finished ? scorePick(pick ?? null, m) : null;
 
   const save = async () => {
-    await onSave(m.id, a, b);
-    setSaved(true); setTimeout(() => setSaved(false), 1500);
+    setBusy(true);
+    try {
+      await onSave(m.id, a, b);
+      setIsEditing(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const today = new Date();
@@ -215,8 +227,11 @@ function MatchCard({ match: m, pick, onSave }) {
             {renderFlag(m.flag_a, "w-14 h-9 object-cover rounded-lg shadow-md border border-white/10 transform hover:scale-110 transition-transform duration-200")}
           </div>
           <span className="font-extrabold text-sm text-center text-white/90">{m.team_a}</span>
-          {!locked && <Stepper value={a} onChange={setA} />}
-          {locked && <span className="font-display text-4xl text-gradient-neon mt-2">{a}</span>}
+          {!locked && !m.finished ? (
+            <Stepper value={a} onChange={setA} disabled={!isEditing} />
+          ) : (
+            <span className="font-display text-4xl text-gradient-neon mt-2">{a}</span>
+          )}
         </div>
 
         <div className="font-display text-white/20 text-3xl select-none">×</div>
@@ -227,8 +242,11 @@ function MatchCard({ match: m, pick, onSave }) {
             {renderFlag(m.flag_b, "w-14 h-9 object-cover rounded-lg shadow-md border border-white/10 transform hover:scale-110 transition-transform duration-200")}
           </div>
           <span className="font-extrabold text-sm text-center text-white/90">{m.team_b}</span>
-          {!locked && <Stepper value={b} onChange={setB} />}
-          {locked && <span className="font-display text-4xl text-gradient-neon mt-2">{b}</span>}
+          {!locked && !m.finished ? (
+            <Stepper value={b} onChange={setB} disabled={!isEditing} />
+          ) : (
+            <span className="font-display text-4xl text-gradient-neon mt-2">{b}</span>
+          )}
         </div>
       </div>
 
@@ -244,10 +262,24 @@ function MatchCard({ match: m, pick, onSave }) {
       )}
 
       {!locked && !m.finished && (
-        <button onClick={save}
-          className="mt-4 w-full bg-gradient-to-r from-lime-400 to-emerald-500 text-[#07060f] font-extrabold py-3 rounded-2xl hover:from-lime-300 hover:to-emerald-400 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-lime-400/15 flex items-center justify-center gap-2">
-          {saved ? <><Check size={16} strokeWidth={3} /> Salvo!</> : "Salvar palpite"}
-        </button>
+        <div className="mt-4 flex flex-col gap-2">
+          {isEditing ? (
+            <button onClick={save} disabled={busy}
+              className="w-full bg-gradient-to-r from-lime-400 to-emerald-500 text-[#07060f] font-extrabold py-3 rounded-2xl hover:from-lime-300 hover:to-emerald-400 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 shadow-lg shadow-lime-400/15 flex items-center justify-center gap-2 disabled:opacity-60 disabled:transform-none">
+              {busy ? <Loader2 className="animate-spin" size={18} /> : "Confirmar Palpite"}
+            </button>
+          ) : (
+            <div className="flex gap-2.5">
+              <div className="flex-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-extrabold py-3 rounded-2xl flex items-center justify-center gap-1.5 select-none text-xs uppercase tracking-wider">
+                <Check size={14} strokeWidth={3} /> Palpite Confirmado
+              </div>
+              <button onClick={() => setIsEditing(true)}
+                className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-lime-400/25 text-white/70 hover:text-white font-extrabold rounded-2xl transition-all duration-200 text-[10px] uppercase tracking-widest shrink-0">
+                Alterar
+              </button>
+            </div>
+          )}
+        </div>
       )}
        {locked && !m.finished && !pick && (
         <div className="mt-4 p-2.5 text-center text-xs font-semibold text-amber-300 bg-amber-500/5 border border-amber-500/10 rounded-xl">
@@ -258,14 +290,16 @@ function MatchCard({ match: m, pick, onSave }) {
   );
 }
 
-function Stepper({ value, onChange }) {
+function Stepper({ value, onChange, disabled }) {
   return (
-    <div className="flex items-center gap-2 mt-1 bg-white/5 p-1 rounded-2xl border border-white/5 shrink-0 max-w-full">
-      <button onClick={() => onChange(Math.max(0, Number(value) - 1))}
-        className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-white font-black text-lg transition-all duration-100">−</button>
+    <div className={`flex items-center gap-2 mt-1 bg-white/5 p-1 rounded-2xl border border-white/5 shrink-0 max-w-full ${disabled ? "opacity-50" : ""}`}>
+      <button onClick={() => !disabled && onChange(Math.max(0, Number(value) - 1))}
+        disabled={disabled}
+        className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-white font-black text-lg transition-all duration-100 disabled:opacity-30">−</button>
       <span className="font-display text-xl text-lime-400 w-5 text-center">{value}</span>
-      <button onClick={() => onChange(Number(value) + 1)}
-        className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-white font-black text-lg transition-all duration-100">+</button>
+      <button onClick={() => !disabled && onChange(Number(value) + 1)}
+        disabled={disabled}
+        className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-white font-black text-lg transition-all duration-100 disabled:opacity-30">+</button>
     </div>
   );
 }
