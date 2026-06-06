@@ -78,7 +78,7 @@ export default function RankingPage() {
                       {pos === 1 && <Crown size={22} className="text-yellow-400 mb-1 animate-bounce" />}
                       <div className="relative mb-2 shrink-0">
                         <img 
-                          src={`/avatares/${r.avatar || "avatar_lion.png"}`} 
+                          src={`/avatares/${r.avatar || "1889-hamster2.png"}`} 
                           alt={r.apelido} 
                           className={`w-10 h-10 rounded-full object-cover bg-[#0a0816] border-2 ${
                             pos === 1 ? "border-yellow-400 shadow-[0_0_12px_rgba(234,179,8,0.25)]" : pos === 2 ? "border-slate-300" : "border-orange-400"
@@ -106,7 +106,7 @@ export default function RankingPage() {
                   className={`flex items-center gap-3.5 rounded-2xl px-4 py-3 border transition-all duration-200 glass-panel ${isMe ? "border-lime-400/40 bg-lime-400/[0.04] shadow-md shadow-lime-400/5" : "border-white/5"}`}>
                   <span className={`font-display text-2xl w-8 text-center ${i < 3 ? medal[i] : "text-white/25"}`}>{i + 1}º</span>
                   <img 
-                    src={`/avatares/${r.avatar || "avatar_lion.png"}`} 
+                    src={`/avatares/${r.avatar || "1889-hamster2.png"}`} 
                     alt={r.apelido} 
                     className="w-9 h-9 rounded-full object-cover bg-[#0a0816] border border-white/10" 
                   />
