@@ -61,7 +61,7 @@ export default function RecuperarSenhaPage() {
           </div>
           <div>
             <h1 className="font-display text-4xl text-white leading-none tracking-tight">
-              Copa
+              COPA 26
             </h1>
             <p className="font-display text-xs text-white/50 tracking-widest leading-none mt-1.5 uppercase">
               Recuperação de Senha

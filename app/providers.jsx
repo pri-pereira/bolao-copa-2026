@@ -13,6 +13,8 @@ export function AppProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [theme, setTheme] = useState("dark");
+
   const loadProfile = useCallback(async (uid) => {
     const { data } = await supabase
       .from("profiles")
@@ -21,6 +23,16 @@ export function AppProvider({ children }) {
       .single();
     setProfile(data ?? null);
   }, [supabase]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("theme") || "dark";
+    setTheme(saved);
+    if (saved === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -44,6 +56,17 @@ export function AppProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    if (next === "light") {
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null); setProfile(null);
@@ -66,7 +89,7 @@ export function AppProvider({ children }) {
   };
 
   return (
-    <AppCtx.Provider value={{ user, profile, apelido, avatar, updateAvatar, loading, supabase, signOut, loadProfile }}>
+    <AppCtx.Provider value={{ user, profile, apelido, avatar, updateAvatar, loading, supabase, signOut, loadProfile, theme, toggleTheme }}>
       {children}
     </AppCtx.Provider>
   );

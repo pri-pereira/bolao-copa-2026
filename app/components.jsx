@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Goal, ListOrdered, ShieldCheck, LogOut, BookOpen, Clock, X } from "lucide-react";
+import { Goal, ListOrdered, ShieldCheck, LogOut, BookOpen, Clock, X, Sun, Moon } from "lucide-react";
 import { useApp } from "./providers";
 
 export function BottomNav() {
@@ -74,19 +74,19 @@ export function DateTimeClock() {
 
   return (
     <div className="flex flex-col items-end gap-0.5 bg-white/5 border border-white/5 px-3 py-1.5 rounded-xl backdrop-blur-md select-none shrink-0">
-      <div className="flex items-center gap-1.5 text-lime-400 font-display text-sm tracking-wider font-extrabold">
-        <Clock size={13} className="animate-pulse shrink-0" />
+      <div className="flex items-center gap-1.5 text-lime-400 font-display text-lg tracking-wider font-extrabold">
+        <Clock size={15} className="animate-pulse shrink-0" />
         <span>{time}</span>
       </div>
-      <div className="text-[9px] text-white/40 font-bold uppercase tracking-wider">
-        {date} <span className="text-[8px] bg-lime-400/10 text-lime-300 px-1 py-0.2 rounded ml-0.5">DF</span>
+      <div className="text-[10px] text-white/40 font-bold uppercase tracking-wider">
+        {date} <span className="text-[9px] bg-lime-400/10 text-lime-300 px-1 py-0.2 rounded ml-0.5">DF</span>
       </div>
     </div>
   );
 }
 
 export function PageHeader({ title, sub, icon }) {
-  const { apelido, avatar, updateAvatar } = useApp();
+  const { apelido, avatar, updateAvatar, theme, toggleTheme } = useApp();
   const [showModal, setShowModal] = useState(false);
   const [avatares, setAvatares] = useState([]);
 
@@ -124,6 +124,13 @@ export function PageHeader({ title, sub, icon }) {
         </div>
       </div>
       <div className="flex items-center justify-between sm:justify-end gap-3 border-t border-white/5 pt-3 sm:border-0 sm:pt-0">
+        <button 
+          onClick={toggleTheme}
+          className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-lime-400/25 text-lime-400 transition-all duration-200"
+          title="Alternar Tema"
+        >
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
         <div 
           onClick={() => setShowModal(true)}
           className="flex items-center gap-2.5 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-lime-400/25 px-3 py-1.5 rounded-xl cursor-pointer select-none transition-all duration-200 animate-fade-in"

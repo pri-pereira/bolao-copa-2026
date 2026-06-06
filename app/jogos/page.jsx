@@ -260,12 +260,12 @@ function MatchCard({ match: m, pick, onSave }) {
 
 function Stepper({ value, onChange }) {
   return (
-    <div className="flex items-center gap-3.5 mt-1 bg-white/5 p-1 rounded-2xl border border-white/5">
+    <div className="flex items-center gap-2 mt-1 bg-white/5 p-1 rounded-2xl border border-white/5 shrink-0 max-w-full">
       <button onClick={() => onChange(Math.max(0, Number(value) - 1))}
-        className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-white font-black text-xl transition-all duration-100">−</button>
-      <span className="font-display text-2xl text-lime-400 w-6 text-center">{value}</span>
+        className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-white font-black text-lg transition-all duration-100">−</button>
+      <span className="font-display text-xl text-lime-400 w-5 text-center">{value}</span>
       <button onClick={() => onChange(Number(value) + 1)}
-        className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-white font-black text-xl transition-all duration-100">+</button>
+        className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-white font-black text-lg transition-all duration-100">+</button>
     </div>
   );
 }
