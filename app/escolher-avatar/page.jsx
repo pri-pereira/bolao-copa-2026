@@ -42,6 +42,7 @@ export default function EscolherAvatarPage() {
     setSaving(true);
     try {
       await updateAvatar(selected);
+      localStorage.removeItem("needsAvatarSelection");
       router.push("/jogos");
     } catch (e) {
       console.error(e);

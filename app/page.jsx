@@ -21,7 +21,12 @@ export default function Home() {
     if (!loading && user) {
       const isRecovery = typeof window !== "undefined" && window.location.hash.includes("type=recovery");
       if (!isRecovery) {
-        router.push("/jogos");
+        const needsAvatar = localStorage.getItem("needsAvatarSelection");
+        if (needsAvatar === "true") {
+          router.push("/escolher-avatar");
+        } else {
+          router.push("/jogos");
+        }
       }
     } 
   }, [user, loading]);
@@ -50,11 +55,18 @@ export default function Home() {
           return;
         }
 
+        // Salva a flag no localStorage para garantir redirecionamento correto pós-cadastro
+        localStorage.setItem("needsAvatarSelection", "true");
+
         const { error } = await supabase.auth.signUp({
           email: email.trim(), password: pass,
           options: { data: { apelido: apelido.trim(), avatar: "1889-hamster2.png" } },
         });
-        if (error) { setErr(error.message); return; }
+        if (error) { 
+          localStorage.removeItem("needsAvatarSelection");
+          setErr(error.message); 
+          return; 
+        }
         router.push("/escolher-avatar");
       } else if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pass });
