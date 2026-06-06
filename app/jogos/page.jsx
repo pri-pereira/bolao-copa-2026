@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useApp } from "../providers";
 import { BottomNav, PageHeader } from "../components";
 import { BgFx, Splash } from "../page";
-import { scorePick, fmtDT, LOCK_MS, getFlagEmoji } from "@/lib/scoring";
+import { scorePick, fmtDT, LOCK_MS, renderFlag } from "@/lib/scoring";
 import { Goal, Clock, Lock, Check, CalendarDays, Loader2 } from "lucide-react";
 
 export default function JogosPage() {
@@ -211,7 +211,9 @@ function MatchCard({ match: m, pick, onSave }) {
       <div className="flex items-center justify-center gap-4 py-2">
         {/* Time A */}
         <div className="flex-1 flex flex-col items-center gap-2">
-          <span className="text-4xl drop-shadow-md select-none transform hover:scale-110 transition-transform duration-200">{getFlagEmoji(m.flag_a)}</span>
+          <div className="h-10 flex items-center justify-center">
+            {renderFlag(m.flag_a, "w-14 h-9 object-cover rounded-lg shadow-md border border-white/10 transform hover:scale-110 transition-transform duration-200")}
+          </div>
           <span className="font-extrabold text-sm text-center text-white/90">{m.team_a}</span>
           {!locked && <Stepper value={a} onChange={setA} />}
           {locked && <span className="font-display text-4xl text-gradient-neon mt-2">{a}</span>}
@@ -221,7 +223,9 @@ function MatchCard({ match: m, pick, onSave }) {
 
         {/* Time B */}
         <div className="flex-1 flex flex-col items-center gap-2">
-          <span className="text-4xl drop-shadow-md select-none transform hover:scale-110 transition-transform duration-200">{getFlagEmoji(m.flag_b)}</span>
+          <div className="h-10 flex items-center justify-center">
+            {renderFlag(m.flag_b, "w-14 h-9 object-cover rounded-lg shadow-md border border-white/10 transform hover:scale-110 transition-transform duration-200")}
+          </div>
           <span className="font-extrabold text-sm text-center text-white/90">{m.team_b}</span>
           {!locked && <Stepper value={b} onChange={setB} />}
           {locked && <span className="font-display text-4xl text-gradient-neon mt-2">{b}</span>}

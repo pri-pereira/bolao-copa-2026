@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useApp } from "../providers";
 import { BottomNav, PageHeader } from "../components";
 import { BgFx, Splash } from "../page";
-import { fmtDT, getFlagEmoji } from "@/lib/scoring";
+import { fmtDT, renderFlag } from "@/lib/scoring";
 import { ShieldCheck, Download, Plus, RefreshCw, X, Loader2, Check } from "lucide-react";
 
 export default function AdminPage() {
@@ -140,7 +140,7 @@ export default function AdminPage() {
               <div key={m.id} className="glass-panel rounded-2xl p-4 border border-white/5 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-extrabold text-white flex items-center gap-1.5">
-                    {getFlagEmoji(m.flag_a)} {m.team_a} <span className="text-white/30 text-xs">×</span> {m.team_b} {getFlagEmoji(m.flag_b)}
+                    {renderFlag(m.flag_a, "w-6 h-4 object-cover rounded shadow-sm inline-block align-middle mr-1.5")} {m.team_a} <span className="text-white/30 text-xs">×</span> {m.team_b} {renderFlag(m.flag_b, "w-6 h-4 object-cover rounded shadow-sm inline-block align-middle ml-1.5")}
                   </span>
                   <button onClick={() => removeMatch(m.id)} className="text-white/30 hover:text-red-400 transition-colors p-1 hover:bg-white/5 rounded-lg">
                     <X size={16} />
