@@ -134,13 +134,6 @@ export function PageHeader({ title, sub, icon }) {
             <Home size={17} />
           </Link>
         )}
-        <button 
-          onClick={toggleTheme}
-          className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-lime-400/25 text-lime-400 transition-all duration-200"
-          title="Alternar Tema"
-        >
-          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
-        </button>
         <div 
           onClick={() => setShowModal(true)}
           className="flex items-center gap-2.5 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-lime-400/25 px-3 py-1.5 rounded-xl cursor-pointer select-none transition-all duration-200 animate-fade-in"
