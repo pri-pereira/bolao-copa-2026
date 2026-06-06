@@ -31,3 +31,5 @@ next-env.d.ts
 # large files / zip / pdf
 *.zip
 *.pdf
+
+.vercel
