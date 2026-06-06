@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 
 const AppCtx = createContext({});
@@ -7,6 +8,7 @@ export const useApp = () => useContext(AppCtx);
 
 export function AppProvider({ children }) {
   const supabase = createClient();
+  const router = useRouter();
   const [user, setUser]       = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,11 +30,15 @@ export function AppProvider({ children }) {
       else setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const u = session?.user ?? null;
       setUser(u);
       if (u) await loadProfile(u.id);
       else setProfile(null);
+
+      if (event === "PASSWORD_RECOVERY") {
+        router.push("/recuperar-senha");
+      }
     });
 
     return () => subscription.unsubscribe();

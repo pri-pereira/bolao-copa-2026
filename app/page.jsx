@@ -17,7 +17,14 @@ export default function Home() {
   const [successMsg, setSuccessMsg] = useState("");
   const [busy, setBusy]         = useState(false);
 
-  useEffect(() => { if (!loading && user) router.push("/jogos"); }, [user, loading]);
+  useEffect(() => { 
+    if (!loading && user) {
+      const isRecovery = typeof window !== "undefined" && window.location.hash.includes("type=recovery");
+      if (!isRecovery) {
+        router.push("/jogos");
+      }
+    } 
+  }, [user, loading]);
 
   if (loading) return <Splash />;
   if (user) return null;
