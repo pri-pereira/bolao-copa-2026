@@ -132,110 +132,103 @@ input::placeholder {
 /* ───────────────────────────────────────────────────────────── */
 
 html.light {
-  --bg: #15803d; /* Fallback verde */
-  --bg-rgb: 21, 128, 61;
-  --primary: #16a34a; /* Verde aproximado da imagem */
-  --primary-rgb: 22, 163, 74;
-  --lime-primary: #15803d; /* Emerald 700 */
+  --bg: #f3f4f6; /* Fundo cinza claro estilo GE */
+  --bg-rgb: 243, 244, 246;
+  --primary: #ec1c24; /* Vermelho GE */
+  --primary-rgb: 236, 28, 36;
+  --lime-primary: #c72c1c; /* Vermelho escuro GE */
   --primary-text: #ffffff;
-  --secondary: #ea580c; /* Laranja da imagem */
-  --accent: #7c3aed;
-  --surface: rgba(255, 255, 255, 0.05);
-  --surface-hover: rgba(255, 255, 255, 0.1);
-  --surface-card: rgba(255, 255, 255, 0.92);
-  --border: rgba(15, 23, 42, 0.08);
-  --border-hover: rgba(15, 23, 42, 0.15);
+  --secondary: #111827; /* Cinza escuro / Preto */
+  --accent: #0284c7; /* Azul GE */
+  --surface: rgba(17, 24, 39, 0.02);
+  --surface-hover: rgba(17, 24, 39, 0.05);
+  --surface-card: #ffffff; /* Cards brancos puros */
+  --border: #e5e7eb; /* Borda cinza clara */
+  --border-hover: #d1d5db;
 }
 
-/* Redefinição do fundo com a imagem do campo de futebol fornecida no tema claro */
+/* Redefinição do fundo limpo estilo Globo Esporte no tema claro */
 html.light body {
-  background-color: #15803d; /* Fallback verde */
-  background-image: 
-    /* Efeito de iluminação de holofotes por cima da imagem */
-    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 60%),
-    url('/fundo-gramado.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  color: #0f172a; /* Slate 900 */
+  background-color: #f3f4f6 !important;
+  background-image: none !important;
+  color: #111827 !important;
 }
 
-/* Suavizar grade futurista no tema claro */
+/* Ocultar grade futurista e luzes no tema claro para manter estética do GE */
 html.light .pointer-events-none.fixed.inset-0 {
-  opacity: 0.015 !important;
+  display: none !important;
 }
 
 /* Sobrescrita dinâmica das classes brancas do Tailwind no tema claro */
 html.light .text-white {
-  color: #0f172a !important;
+  color: #111827 !important;
 }
 html.light .text-white\/90 {
-  color: rgba(15, 23, 42, 0.9) !important;
+  color: rgba(17, 24, 39, 0.9) !important;
 }
 html.light .text-white\/80 {
-  color: rgba(15, 23, 42, 0.8) !important;
+  color: rgba(17, 24, 39, 0.8) !important;
 }
 html.light .text-white\/70 {
-  color: rgba(15, 23, 42, 0.7) !important;
+  color: rgba(17, 24, 39, 0.7) !important;
 }
 html.light .text-white\/60 {
-  color: rgba(15, 23, 42, 0.6) !important;
+  color: rgba(17, 24, 39, 0.6) !important;
 }
 html.light .text-white\/50 {
-  color: rgba(15, 23, 42, 0.5) !important;
+  color: rgba(17, 24, 39, 0.5) !important;
 }
 html.light .text-white\/45 {
-  color: rgba(15, 23, 42, 0.45) !important;
+  color: rgba(17, 24, 39, 0.45) !important;
 }
 html.light .text-white\/40 {
-  color: rgba(15, 23, 42, 0.4) !important;
+  color: rgba(17, 24, 39, 0.4) !important;
 }
 html.light .text-white\/35 {
-  color: rgba(15, 23, 42, 0.35) !important;
+  color: rgba(17, 24, 39, 0.35) !important;
 }
 html.light .text-white\/30 {
-  color: rgba(15, 23, 42, 0.3) !important;
+  color: rgba(17, 24, 39, 0.3) !important;
 }
 html.light .text-white\/25 {
-  color: rgba(15, 23, 42, 0.25) !important;
+  color: rgba(17, 24, 39, 0.25) !important;
 }
 html.light .text-white\/20 {
-  color: rgba(15, 23, 42, 0.2) !important;
+  color: rgba(17, 24, 39, 0.2) !important;
 }
 html.light .text-white\/10 {
-  color: rgba(15, 23, 42, 0.1) !important;
+  color: rgba(17, 24, 39, 0.1) !important;
 }
 
 html.light .border-white\/5 {
-  border-color: rgba(15, 23, 42, 0.06) !important;
+  border-color: rgba(17, 24, 39, 0.06) !important;
 }
 html.light .border-white\/10 {
-  border-color: rgba(15, 23, 42, 0.12) !important;
+  border-color: rgba(17, 24, 39, 0.12) !important;
 }
 html.light .border-white\/15 {
-  border-color: rgba(15, 23, 42, 0.18) !important;
+  border-color: rgba(17, 24, 39, 0.18) !important;
 }
 html.light .border-white\/20 {
-  border-color: rgba(15, 23, 42, 0.24) !important;
+  border-color: rgba(17, 24, 39, 0.24) !important;
 }
 
 html.light .bg-white\/5 {
-  background-color: rgba(15, 23, 42, 0.04) !important;
+  background-color: rgba(17, 24, 39, 0.04) !important;
 }
 html.light .bg-white\/10 {
-  background-color: rgba(15, 23, 42, 0.08) !important;
+  background-color: rgba(17, 24, 39, 0.08) !important;
 }
 
-/* Sobrescrita de classes de cores fluorescentes ou de baixo contraste no tema claro */
+/* Sobrescrita de classes de cores fluorescentes ou de baixo contraste no tema claro estilo GE */
 html.light .text-lime-400 {
-  color: #15803d !important; /* Verde folha escuro legível */
+  color: #ec1c24 !important; /* Vermelho GE */
 }
 html.light .text-lime-300 {
-  color: #166534 !important; /* Verde escuro legível */
+  color: #c72c1c !important; /* Vermelho escuro GE */
 }
 html.light .text-lime-500 {
-  color: #14532d !important;
+  color: #b91c1c !important;
 }
 html.light .text-emerald-400 {
   color: #047857 !important; /* Verde esmeralda legível */
@@ -247,31 +240,31 @@ html.light .text-emerald-500 {
   color: #065f46 !important;
 }
 html.light .text-amber-300 {
-  color: #b45309 !important; /* Amber legível */
+  color: #d97706 !important; /* Laranja legível */
 }
 html.light .text-amber-400 {
-  color: #9a3412 !important;
+  color: #b45309 !important;
 }
 html.light .text-red-400 {
   color: #b91c1c !important; /* Vermelho legível */
 }
 html.light .text-slate-300 {
-  color: #475569 !important; /* Slate para medalha de 2º lugar */
+  color: #4b5563 !important; /* Slate para medalha de 2º lugar */
 }
 
-/* Gradientes no tema claro */
+/* Gradientes no tema claro (sem neon, usando cores puras do GE) */
 html.light .text-gradient-neon {
-  background: linear-gradient(135deg, #15803d 0%, #064e3b 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
+  background: #111827 !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: #111827 !important;
 }
 html.light .text-gradient-orange {
-  background: linear-gradient(135deg, #c2410c 0%, #7c2d12 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
+  background: #ec1c24 !important;
+  -webkit-background-clip: initial !important;
+  -webkit-text-fill-color: #ec1c24 !important;
 }
 
-/* Forçar textos brancos em botões de destaque no tema claro */
+/* Forçar vermelho GE em botões de destaque no tema claro */
 html.light .bg-lime-400,
 html.light .bg-amber-500,
 html.light .bg-gradient-to-r.from-lime-400.to-emerald-500,
@@ -279,108 +272,115 @@ html.light .bg-gradient-to-br.from-lime-400.to-emerald-500 {
   color: #ffffff !important;
 }
 html.light .bg-lime-400 {
-  background-color: #15803d !important;
+  background-color: #ec1c24 !important;
 }
 html.light .bg-amber-500 {
   background-color: #d97706 !important;
 }
 html.light .bg-gradient-to-r.from-lime-400.to-emerald-500,
 html.light .bg-gradient-to-br.from-lime-400.to-emerald-500 {
-  background: linear-gradient(135deg, #15803d 0%, #047857 100%) !important;
+  background: #ec1c24 !important;
+}
+html.light .bg-gradient-to-r.from-lime-400.to-emerald-500:hover,
+html.light .bg-gradient-to-br.from-lime-400.to-emerald-500:hover {
+  background: #c72c1c !important;
 }
 
-/* Badges e alertas no tema claro */
-html.light .bg-amber-500\/10 {
-  background-color: rgba(217, 119, 6, 0.12) !important;
-}
-html.light .border-amber-500\/20 {
-  border-color: rgba(217, 119, 6, 0.25) !important;
-}
-html.light .bg-amber-500\/5 {
-  background-color: rgba(217, 119, 6, 0.08) !important;
-}
-html.light .border-amber-500\/10 {
-  border-color: rgba(217, 119, 6, 0.18) !important;
-}
+/* Badges e alertas no tema claro estilo GE */
 html.light .bg-lime-400\/10 {
-  background-color: rgba(22, 163, 74, 0.12) !important;
+  background-color: #ecfdf5 !important;
 }
 html.light .border-lime-400\/25 {
-  border-color: rgba(22, 163, 74, 0.25) !important;
+  border-color: #a7f3d0 !important;
+}
+html.light .bg-amber-500\/10 {
+  background-color: #fffbeb !important;
+}
+html.light .border-amber-500\/20 {
+  border-color: #fde68a !important;
+}
+html.light .bg-amber-500\/5 {
+  background-color: #fffdf5 !important;
+}
+html.light .border-amber-500\/10 {
+  border-color: #fef3c7 !important;
 }
 html.light .bg-emerald-500\/10 {
-  background-color: rgba(16, 185, 129, 0.12) !important;
+  background-color: #ecfdf5 !important;
 }
 html.light .border-emerald-500\/25 {
-  border-color: rgba(16, 185, 129, 0.25) !important;
+  border-color: #a7f3d0 !important;
 }
 html.light .bg-red-500\/10 {
-  background-color: rgba(239, 68, 68, 0.12) !important;
+  background-color: #fef2f2 !important;
 }
 html.light .border-red-500\/10 {
-  border-color: rgba(239, 68, 68, 0.22) !important;
+  border-color: #fca5a5 !important;
 }
 
 /* Destaque "Você" e pódio */
 html.light .border-lime-400\/40 {
-  border-color: rgba(21, 128, 61, 0.35) !important;
+  border-color: #fca5a5 !important;
 }
 html.light .bg-lime-400\/5,
 html.light .bg-lime-400\/\[0\.04\] {
-  background-color: rgba(22, 163, 74, 0.06) !important;
+  background-color: #fef2f2 !important;
 }
 
-/* Painéis Transparentes Glassmorphism com fundo branco opaco reforçado no claro */
+/* Painéis Glassmorphism convertidos em caixas brancas esportivas no claro */
 html.light .glass-panel {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border-color: rgba(15, 23, 42, 0.1) !important;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08) !important;
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 html.light .glass-panel:hover {
-  border-color: rgba(15, 23, 42, 0.18) !important;
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.12) !important;
+  border-color: #d1d5db !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04) !important;
 }
 
 /* Adaptação de fundos específicos */
 html.light .bg-\[\#0a0816\] {
-  background-color: #f1f5f9 !important; /* Slate 100 */
+  background-color: #f3f4f6 !important;
 }
 html.light .bg-\[\#07060f\] {
-  background-color: #143f2e !important; /* Gramado verde */
+  background-color: #f3f4f6 !important;
 }
 html.light .bg-black\/40 {
-  background-color: rgba(15, 23, 42, 0.04) !important;
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
 }
 html.light .bg-black\/75 {
-  background-color: rgba(255, 255, 255, 0.75) !important;
+  background-color: rgba(255, 255, 255, 0.85) !important;
   backdrop-filter: blur(8px);
 }
 
 /* Mapeamento de formulários */
 html.light input, html.light select, html.light textarea {
   background: #ffffff !important;
-  border: 1px solid rgba(15, 23, 42, 0.2) !important;
-  color: #0f172a !important;
+  border: 1px solid #d1d5db !important;
+  color: #111827 !important;
 }
 html.light input:focus, html.light select:focus {
   background: #ffffff !important;
-  border-color: #15803d !important;
-  box-shadow: 0 0 15px rgba(21, 128, 61, 0.2) !important;
+  border-color: #ec1c24 !important;
+  box-shadow: 0 0 0 2px rgba(236, 28, 36, 0.15) !important;
 }
 html.light input::placeholder {
-  color: rgba(15, 23, 42, 0.45) !important;
+  color: #9ca3af !important;
 }
 
 /* Ajustes de botões secundários no tema claro */
 html.light button.shrink-0 {
-  background-color: rgba(15, 23, 42, 0.05) !important;
-  border-color: rgba(15, 23, 42, 0.1) !important;
-  color: rgba(15, 23, 42, 0.7) !important;
+  background-color: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+  color: #374151 !important;
 }
 html.light button.shrink-0:hover {
-  background-color: rgba(15, 23, 42, 0.1) !important;
-  border-color: #15803d !important;
-  color: #15803d !important;
+  background-color: #e5e7eb !important;
+  border-color: #d1d5db !important;
+  color: #ec1c24 !important;
 }
 
 /* Ajustes de responsividade móvel extrema para BottomNav e Steppers */

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Goal, ListOrdered, ShieldCheck, LogOut, BookOpen, Clock, X, Sun, Moon } from "lucide-react";
+import { Goal, ListOrdered, ShieldCheck, LogOut, BookOpen, Clock, X, Sun, Moon, Home } from "lucide-react";
 import { useApp } from "./providers";
 
 export function BottomNav() {
@@ -10,7 +10,7 @@ export function BottomNav() {
   const path = usePathname();
 
   const tabs = [
-    { href: "/jogos",   label: "Jogos",   icon: Goal },
+    { href: "/jogos",   label: "Início",  icon: Home },
     { href: "/ranking", label: "Ranking", icon: ListOrdered },
     { href: "/regras",  label: "Regras",  icon: BookOpen },
     ...(profile?.is_admin ? [{ href: "/admin", label: "Admin", icon: ShieldCheck }] : []),
@@ -87,6 +87,7 @@ export function DateTimeClock() {
 
 export function PageHeader({ title, sub, icon }) {
   const { apelido, avatar, updateAvatar, theme, toggleTheme } = useApp();
+  const pathname = usePathname();
   const [showModal, setShowModal] = useState(false);
   const [avatares, setAvatares] = useState([]);
 
@@ -124,6 +125,15 @@ export function PageHeader({ title, sub, icon }) {
         </div>
       </div>
       <div className="flex items-center justify-between sm:justify-end gap-3 border-t border-white/5 pt-3 sm:border-0 sm:pt-0">
+        {pathname !== "/jogos" && (
+          <Link 
+            href="/jogos" 
+            className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-lime-400/25 text-lime-400 transition-all duration-200"
+            title="Ir para o Início"
+          >
+            <Home size={17} />
+          </Link>
+        )}
         <button 
           onClick={toggleTheme}
           className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-lime-400/25 text-lime-400 transition-all duration-200"

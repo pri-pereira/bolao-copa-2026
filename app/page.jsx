@@ -86,11 +86,17 @@ export default function Home() {
       <BgFx />
       <div className="w-full max-w-md relative z-10">
         {/* Logo Header */}
-        <div className="flex flex-col items-center gap-3 mb-10 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-lime-400 to-emerald-500 text-[#07060f] flex items-center justify-center shadow-[0_0_30px_rgba(163,230,53,0.35)] transform rotate-3 hover:rotate-12 transition-transform duration-300">
-            <Trophy size={28} strokeWidth={2.5} />
+        <div className="flex flex-col items-center gap-3 mb-8 text-center">
+          <div className="relative group select-none">
+            {/* Brilho neon sutil ao fundo */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-lime-400 to-emerald-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-300"></div>
+            <img 
+              src="/logo-copa26.png" 
+              alt="Logo Copa 2026" 
+              className="relative w-36 h-36 object-contain rounded-3xl bg-black border border-white/10 p-2.5 shadow-2xl transition-transform duration-300 hover:scale-105" 
+            />
           </div>
-          <div>
+          <div className="mt-2">
             <h1 className="font-display text-4xl text-white leading-none tracking-tight">
               COPA 26
             </h1>

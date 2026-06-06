@@ -23,7 +23,11 @@ export default function RankingPage() {
       supabase.from("picks").select("*"),
       supabase.from("matches").select("*"),
     ]);
-    const r = computeRanking(profiles ?? [], picks ?? [], matches ?? []);
+    const sanitizedProfiles = (profiles ?? []).map((p) => ({
+      ...p,
+      apelido: p.apelido?.includes("@") ? p.apelido.split("@")[0] : p.apelido,
+    }));
+    const r = computeRanking(sanitizedProfiles, picks ?? [], matches ?? []);
     setRanking(r);
     setFinishedCount((matches ?? []).filter((m) => m.finished).length);
     setFetching(false);
