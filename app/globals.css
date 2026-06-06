@@ -132,32 +132,31 @@ input::placeholder {
 /* ───────────────────────────────────────────────────────────── */
 
 html.light {
-  --bg: #143f2e; /* Slate 50 */
-  --bg-rgb: 20, 63, 46;
-  --primary: #15803d; /* Emerald 600 */
-  --primary-rgb: 21, 128, 61;
-  --lime-primary: #166534; /* Emerald 700 */
+  --bg: #15803d; /* Fallback verde */
+  --bg-rgb: 21, 128, 61;
+  --primary: #16a34a; /* Verde aproximado da imagem */
+  --primary-rgb: 22, 163, 74;
+  --lime-primary: #15803d; /* Emerald 700 */
   --primary-text: #ffffff;
-  --secondary: #c2410c; /* Orange 600 */
-  --accent: #6d28d9; /* Violet 600 */
-  --surface: rgba(15, 23, 42, 0.03);
-  --surface-hover: rgba(15, 23, 42, 0.06);
-  --surface-card: rgba(255, 255, 255, 0.9);
-  --border: rgba(15, 23, 42, 0.1);
-  --border-hover: rgba(15, 23, 42, 0.18);
+  --secondary: #ea580c; /* Laranja da imagem */
+  --accent: #7c3aed;
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-hover: rgba(255, 255, 255, 0.1);
+  --surface-card: rgba(255, 255, 255, 0.92);
+  --border: rgba(15, 23, 42, 0.08);
+  --border-hover: rgba(15, 23, 42, 0.15);
 }
 
-/* Redefinição do fundo para gramado de campo de futebol no tema claro */
+/* Redefinição do fundo com a imagem do campo de futebol fornecida no tema claro */
 html.light body {
-  background-color: #143f2e; /* Verde escuro base */
+  background-color: #15803d; /* Fallback verde */
   background-image: 
-    /* Listras verticais alternadas de verde de campo de futebol */
-    linear-gradient(90deg, #103c2b 50%, #164734 50%),
-    /* Efeito de iluminação de holofotes no topo */
-    radial-gradient(circle at 50% 0%, rgba(74, 222, 128, 0.15) 0%, transparent 75%),
-    /* Sombra suave no rodapé */
-    radial-gradient(circle at 50% 100%, rgba(6, 78, 59, 0.2) 0%, transparent 75%);
-  background-size: 160px 100%, 100% 100%, 100% 100%;
+    /* Efeito de iluminação de holofotes por cima da imagem */
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 60%),
+    url('/fundo-gramado.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   background-attachment: fixed;
   color: #0f172a; /* Slate 900 */
 }
