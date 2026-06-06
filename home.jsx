@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { carregarJogosCopa } from './test-api'; // Ajustado para ler do seu arquivo test-api.js
-import { jogosDeTesteMock } from './jogosTeste'; // Importe os jogos de teste
+import { carregarJogosCopa } from './api'; // Importando do arquivo api.js recém-criado
+import { jogosDeTesteMock } from './jogosTeste'; // Importando os jogos de teste
 
 export default function Home() {
   const [todosOsJogos, setTodosOsJogos] = useState([]);
   const [jogosFiltrados, setJogosFiltrados] = useState([]);
   const [categoriaAtiva, setCategoriaAtiva] = useState('Jogos do dia');
+  const [mounted, setMounted] = useState(false);
 
   // CHAVE LIGA/DESLIGA: Mude para false para voltar para a Copa Oficial
   const MODO_TESTE = true; 
@@ -22,6 +23,11 @@ export default function Home() {
     'Final'
   ];
 
+  // Garantir que a renderização de datas e horários só ocorra no cliente para evitar Hydration Mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     async function iniciar() {
       if (MODO_TESTE) {
@@ -37,6 +43,8 @@ export default function Home() {
   }, [MODO_TESTE]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const hoje = new Date().toLocaleDateString('pt-BR');
 
     // Lógica para filtrar os jogos baseado na categoria selecionada
@@ -69,7 +77,7 @@ export default function Home() {
     });
 
     setJogosFiltrados(filtrar);
-  }, [categoriaAtiva, todosOsJogos]);
+  }, [categoriaAtiva, todosOsJogos, mounted]);
 
   return (
     <div className="container-home">
@@ -94,7 +102,11 @@ export default function Home() {
         ) : (
           jogosFiltrados.map(jogo => (
             <div key={jogo.id} className="card-jogo">
-              <span>{jogo.data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+              <span>
+                {mounted 
+                  ? jogo.data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) 
+                  : '--:--'}
+              </span>
               <div className="confronto">
                 {jogo.timeCasa} x {jogo.timeVisitante}
               </div>
