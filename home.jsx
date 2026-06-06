@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { carregarJogosCopa } from './test-api'; // Ajustado para ler do seu arquivo test-api.js
+import { jogosDeTesteMock } from './jogosTeste'; // Importe os jogos de teste
 
 export default function Home() {
   const [todosOsJogos, setTodosOsJogos] = useState([]);
   const [jogosFiltrados, setJogosFiltrados] = useState([]);
-  
-  // Definindo a categoria inicial fixa como "Todos" para visualização de teste
-  const [categoriaAtiva, setCategoriaAtiva] = useState('Todos');
+  const [categoriaAtiva, setCategoriaAtiva] = useState('Jogos do dia');
 
-  // Lista com a nova ordem exata das categorias que você pediu
+  // CHAVE LIGA/DESLIGA: Mude para false para voltar para a Copa Oficial
+  const MODO_TESTE = true; 
+
   const categorias = [
     'Jogos do dia', 
     'Todos', 
@@ -23,11 +24,17 @@ export default function Home() {
 
   useEffect(() => {
     async function iniciar() {
-      const lista = await carregarJogosCopa();
-      setTodosOsJogos(lista);
+      if (MODO_TESTE) {
+        // Se o modo teste estiver ativo, carrega os jogos falsos de hoje
+        setTodosOsJogos(jogosDeTesteMock);
+      } else {
+        // Caso contrário, carrega os 104 jogos oficiais da API da Copa
+        const lista = await carregarJogosCopa();
+        setTodosOsJogos(lista);
+      }
     }
     iniciar();
-  }, []);
+  }, [MODO_TESTE]);
 
   useEffect(() => {
     const hoje = new Date().toLocaleDateString('pt-BR');
