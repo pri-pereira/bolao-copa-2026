@@ -69,11 +69,11 @@ export default function RegrasPage() {
             <div className="space-y-3.5 text-xs text-white/70 leading-relaxed font-medium">
               <div className="flex items-center gap-2.5 bg-white/5 border border-white/5 p-3 rounded-xl">
                 <CheckCircle2 size={16} className="text-lime-400 shrink-0" />
-                <span>Você pode alterar seus palpites quantas vezes quiser até **1 hora antes** do início do jogo.</span>
+                <span>Você pode alterar seus palpites quantas vezes quiser até **30 minutos antes** do início do jogo.</span>
               </div>
               <div className="flex items-center gap-2.5 bg-white/5 border border-white/5 p-3 rounded-xl">
                 <Clock size={16} className="text-orange-400 shrink-0" />
-                <span>Faltando exatamente **1 hora** para o início do jogo, os palpites serão **travados** e ninguém mais poderá alterá-los.</span>
+                <span>Faltando exatamente **30 minutos** para o início do jogo, os palpites serão **travados** e ninguém mais poderá alterá-los.</span>
               </div>
             </div>
           </div>

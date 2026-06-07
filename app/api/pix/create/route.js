@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 
+// Preço da inscrição do Bolão definido e fixado com segurança no backend
+const TICKET_PRICE = Number(process.env.TICKET_PRICE) || 20.00;
+
 export async function POST(request) {
   try {
-    const { email, value } = await request.json();
+    const { email } = await request.json();
 
-    // Validação básica do valor
-    if (!value || Number(value) <= 0) {
-      return NextResponse.json({ error: 'Valor inválido' }, { status: 400 });
+    // Validação básica do email
+    if (!email) {
+      return NextResponse.json({ error: 'E-mail é obrigatório para gerar o Pix.' }, { status: 400 });
     }
 
     const response = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -18,8 +21,8 @@ export async function POST(request) {
         'X-Idempotency-Key': crypto.randomUUID() // Proteção contra requisições duplicadas
       },
       body: JSON.stringify({
-        transaction_amount: Number(value),
-        description: 'Pagamento de Serviço/Produto',
+        transaction_amount: TICKET_PRICE,
+        description: 'Inscrição Bolão Copa 2026',
         payment_method_id: 'pix',
         payer: {
           email: email
@@ -44,3 +47,4 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+

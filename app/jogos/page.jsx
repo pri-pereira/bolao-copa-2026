@@ -6,9 +6,10 @@ import { BottomNav, PageHeader } from "../components";
 import { BgFx, Splash } from "../page";
 import { scorePick, fmtDT, LOCK_MS, renderFlag } from "@/lib/scoring";
 import { Goal, Clock, Lock, Check, CalendarDays, Loader2 } from "lucide-react";
+import { jogosDeTesteMock } from "../../jogosTeste";
 
 export default function JogosPage() {
-  const { user, apelido, loading, supabase } = useApp();
+  const { user, apelido, loading, supabase, MODO_TESTE } = useApp();
   const router = useRouter();
   const [matches, setMatches] = useState([]);
   const [picks, setPicks]     = useState({}); // { match_id: {score_a, score_b} }
@@ -19,6 +20,16 @@ export default function JogosPage() {
 
   const loadData = useCallback(async () => {
     if (!user) return;
+
+    if (MODO_TESTE) {
+      setMatches(jogosDeTesteMock);
+      const localPicksRaw = localStorage.getItem("picks_teste");
+      const localPicks = localPicksRaw ? JSON.parse(localPicksRaw) : {};
+      setPicks(localPicks);
+      setFetching(false);
+      return;
+    }
+
     const [{ data: ms }, { data: ps }] = await Promise.all([
       supabase.from("matches").select("*").order("match_datetime"),
       supabase.from("picks").select("*").eq("profile_id", user.id),
@@ -28,7 +39,7 @@ export default function JogosPage() {
     for (const p of ps ?? []) map[p.match_id] = { score_a: p.score_a, score_b: p.score_b };
     setPicks(map);
     setFetching(false);
-  }, [user, supabase]);
+  }, [user, supabase, MODO_TESTE]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -36,6 +47,16 @@ export default function JogosPage() {
 
   const savePick = async (matchId, a, b) => {
     const pa = Number(a); const pb = Number(b);
+
+    if (MODO_TESTE) {
+      setPicks((prev) => {
+        const updated = { ...prev, [matchId]: { score_a: pa, score_b: pb } };
+        localStorage.setItem("picks_teste", JSON.stringify(updated));
+        return updated;
+      });
+      return;
+    }
+
     await supabase.from("picks").upsert(
       { profile_id: user.id, match_id: matchId, score_a: pa, score_b: pb, updated_at: new Date().toISOString() },
       { onConflict: "profile_id,match_id" }

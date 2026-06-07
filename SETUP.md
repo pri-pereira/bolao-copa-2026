@@ -153,7 +153,7 @@ npm run dev
 | Errou tudo | **0 pontos** |
 | Sem palpite (não jogou) | **vale 0×0** |
 
-**Trava:** palpites ficam bloqueados **1 hora** antes do início do jogo.
+**Trava:** palpites ficam bloqueados **30 minutos** antes do início do jogo.
 
 ---
 

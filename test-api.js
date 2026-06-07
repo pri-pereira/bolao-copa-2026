@@ -1,12 +1,16 @@
 // test-api.js
-const API_KEY = '444eb186107a475f910f9e3da420f970'; // Chave da API Football-Data.org
+const API_KEY = process.env.FOOTBALL_DATA_API_KEY; // Obtida de variáveis de ambiente
 
 export async function carregarJogosCopa() {
   const URL = 'https://api.football-data.org/v4/competitions/WC/matches';
 
+  if (!API_KEY) {
+    console.warn("Aviso: FOOTBALL_DATA_API_KEY não configurada no ambiente.");
+  }
+
   try {
     const response = await fetch(URL, {
-      headers: { 'X-Auth-Token': API_KEY }
+      headers: API_KEY ? { 'X-Auth-Token': API_KEY } : {}
     });
     
     if (!response.ok) {
@@ -31,4 +35,5 @@ export async function carregarJogosCopa() {
     console.error("Erro ao carregar jogos:", error);
     return [];
   }
-}
+}
+
