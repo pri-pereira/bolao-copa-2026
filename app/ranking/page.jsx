@@ -6,10 +6,9 @@ import { BottomNav, PageHeader } from "../components";
 import { BgFx, Splash } from "../page";
 import { computeRanking } from "@/lib/scoring";
 import { ListOrdered, Crown, Users, Loader2 } from "lucide-react";
-import { jogosDeTesteMock, perfisDeTesteMock, palpitesDeTesteMock } from "../../jogosTeste";
 
 export default function RankingPage() {
-  const { user, profile, loading, supabase, apelido, avatar, MODO_TESTE } = useApp();
+  const { user, profile, loading, supabase, apelido, avatar } = useApp();
   const router = useRouter();
   const [ranking, setRanking] = useState([]);
   const [finishedCount, setFinishedCount] = useState(0);
@@ -19,41 +18,6 @@ export default function RankingPage() {
 
   const loadRanking = useCallback(async () => {
     if (!user) return;
-
-    if (MODO_TESTE) {
-      // 1. Criar perfil do próprio usuário logado
-      const me = {
-        id: user.id,
-        apelido: apelido || "Você",
-        avatar: avatar || "1889-hamster2.png",
-        points_offset: 0,
-        exact_offset: 0,
-        partial_offset: 0
-      };
-
-      // 2. Unir com os perfis fictícios
-      const allProfiles = [me, ...perfisDeTesteMock];
-
-      // 3. Obter os palpites locais do usuário logado
-      const localPicksRaw = localStorage.getItem("picks_teste");
-      const localPicks = localPicksRaw ? JSON.parse(localPicksRaw) : {};
-      const myPicksArray = Object.entries(localPicks).map(([matchId, val]) => ({
-        profile_id: user.id,
-        match_id: Number(matchId),
-        score_a: val.score_a,
-        score_b: val.score_b
-      }));
-
-      // 4. Unir os palpites locais com os palpites mockados
-      const allPicks = [...palpitesDeTesteMock, ...myPicksArray];
-
-      // 5. Calcular o ranking dinamicamente usando a lógica padrão
-      const r = computeRanking(allProfiles, allPicks, jogosDeTesteMock);
-      setRanking(r);
-      setFinishedCount(jogosDeTesteMock.filter((m) => m.finished).length);
-      setFetching(false);
-      return;
-    }
 
     const [{ data: profiles }, { data: picks }, { data: matches }] = await Promise.all([
       supabase.from("profiles").select("*"),
@@ -68,7 +32,7 @@ export default function RankingPage() {
     setRanking(r);
     setFinishedCount((matches ?? []).filter((m) => m.finished).length);
     setFetching(false);
-  }, [user, supabase, MODO_TESTE, apelido, avatar]);
+  }, [user, supabase]);
 
   useEffect(() => { loadRanking(); }, [loadRanking]);
 

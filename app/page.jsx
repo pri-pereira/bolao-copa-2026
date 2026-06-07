@@ -7,7 +7,7 @@ import { Trophy, Loader2 } from "lucide-react";
 
 
 export default function Home() {
-  const { user, loading, supabase, MODO_TESTE } = useApp();
+  const { user, loading, supabase } = useApp();
   const router = useRouter();
   const [mode, setMode]         = useState("login");
   const [email, setEmail]       = useState("");
@@ -37,72 +37,6 @@ export default function Home() {
   const submit = async () => {
     setErr(""); setSuccessMsg(""); setBusy(true);
     try {
-      if (MODO_TESTE) {
-        if (mode === "cadastro") {
-          if (!email.trim()) { setErr("Insira um e-mail válido."); setBusy(false); return; }
-          if (!apelido.trim()) { setErr("Escolha um apelido."); setBusy(false); return; }
-          if (!pass || pass.length < 6) { setErr("A senha deve ter no mínimo 6 caracteres."); setBusy(false); return; }
-
-          // Cria sessão mockada
-          const fakeUser = {
-            id: "test_user_custom",
-            email: email.trim(),
-            user_metadata: { apelido: apelido.trim(), avatar: "1889-hamster2.png" }
-          };
-          localStorage.setItem("user_teste", JSON.stringify(fakeUser));
-          localStorage.setItem("needsAvatarSelection", "true");
-          
-          // Dispara recarga local simulada
-          window.location.reload();
-        } else if (mode === "login") {
-          if (!email.trim() || !pass || pass.length < 6) {
-            setErr("Credenciais inválidas. Use pelo menos 6 caracteres na senha de teste.");
-            setBusy(false);
-            return;
-          }
-
-          let customApelido = "Você";
-          let customAvatar = "1889-hamster2.png";
-          let customId = "test_user_logged";
-          
-          const emailLower = email.trim().toLowerCase();
-          if (emailLower === "pedro@teste.com") {
-            customApelido = "Pedro Silva";
-            customAvatar = "../avatars/avatar1.png";
-            customId = "test_user_1";
-          } else if (emailLower === "lucas@teste.com") {
-            customApelido = "Lucas Santos";
-            customAvatar = "../avatars/avatar2.png";
-            customId = "test_user_2";
-          } else if (emailLower === "mariana@teste.com") {
-            customApelido = "Mariana Costa";
-            customAvatar = "../avatars/avatar3.png";
-            customId = "test_user_3";
-          } else {
-            customApelido = email.split("@")[0];
-          }
-
-          const fakeUser = {
-            id: customId,
-            email: email.trim(),
-            user_metadata: { apelido: customApelido, avatar: customAvatar }
-          };
-          localStorage.setItem("user_teste", JSON.stringify(fakeUser));
-          localStorage.removeItem("needsAvatarSelection");
-          
-          window.location.reload();
-        } else if (mode === "recuperar") {
-          setSuccessMsg("E-mail de recuperação enviado (Simulado)! Verifique sua caixa de entrada.");
-          setTimeout(() => {
-            setMode("login");
-            setSuccessMsg("");
-            setErr("");
-          }, 2500);
-        }
-        setBusy(false);
-        return;
-      }
-
       if (mode === "cadastro") {
         if (!email.trim()) { setErr("Insira um e-mail válido."); setBusy(false); return; }
         if (!apelido.trim()) { setErr("Escolha um apelido."); setBusy(false); return; }

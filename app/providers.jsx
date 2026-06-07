@@ -4,12 +4,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { computeRanking } from "@/lib/scoring";
 import confetti from "canvas-confetti";
-
 const AppCtx = createContext({});
 export const useApp = () => useContext(AppCtx);
 
 export function AppProvider({ children }) {
-  const MODO_TESTE = false; // Chave mestre global do modo de teste (Altere para false para produção)
+
   const supabase = createClient();
   const router = useRouter();
   const [user, setUser]       = useState(null);
@@ -63,24 +62,6 @@ export function AppProvider({ children }) {
 
   // Fluxo de sessão
   useEffect(() => {
-    if (MODO_TESTE) {
-      const localUserRaw = localStorage.getItem("user_teste");
-      if (localUserRaw) {
-        const u = JSON.parse(localUserRaw);
-        setUser(u);
-        setProfile({
-          id: u.id,
-          apelido: u.user_metadata?.apelido || "Você",
-          avatar: u.user_metadata?.avatar || "1889-hamster2.png"
-        });
-      } else {
-        setUser(null);
-        setProfile(null);
-      }
-      setLoading(false);
-      return;
-    }
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
@@ -189,14 +170,6 @@ export function AppProvider({ children }) {
   };
 
   const signOut = async () => {
-    if (MODO_TESTE) {
-      localStorage.removeItem("user_teste");
-      localStorage.removeItem("picks_teste");
-      localStorage.removeItem("needsAvatarSelection");
-      setUser(null); setProfile(null); setMyRankingPos(null);
-      router.push("/");
-      return;
-    }
     await supabase.auth.signOut();
     setUser(null); setProfile(null); setMyRankingPos(null);
   };
@@ -206,19 +179,6 @@ export function AppProvider({ children }) {
 
   const updateAvatar = async (newAvatar) => {
     if (!user) return;
-    if (MODO_TESTE) {
-      setProfile((prev) => {
-        const updated = prev ? { ...prev, avatar: newAvatar } : null;
-        const localUserRaw = localStorage.getItem("user_teste");
-        if (localUserRaw) {
-          const u = JSON.parse(localUserRaw);
-          u.user_metadata = { ...u.user_metadata, avatar: newAvatar };
-          localStorage.setItem("user_teste", JSON.stringify(u));
-        }
-        return updated;
-      });
-      return;
-    }
     const { error } = await supabase
       .from("profiles")
       .update({ avatar: newAvatar })
@@ -231,7 +191,7 @@ export function AppProvider({ children }) {
   };
 
   return (
-    <AppCtx.Provider value={{ user, profile, apelido, avatar, updateAvatar, loading, supabase, signOut, loadProfile, theme, toggleTheme, MODO_TESTE }}>
+    <AppCtx.Provider value={{ user, profile, apelido, avatar, updateAvatar, loading, supabase, signOut, loadProfile, theme, toggleTheme }}>
       {children}
       {toast && <NotificationToast toast={toast} onClose={() => setToast(null)} />}
     </AppCtx.Provider>

@@ -9,6 +9,7 @@ create table public.profiles (
   apelido      text not null,
   avatar       text not null default '1889-hamster2.png',
   is_admin     boolean not null default false,
+  pix_aprovado boolean not null default false,
   created_at   timestamptz default now()
 );
 

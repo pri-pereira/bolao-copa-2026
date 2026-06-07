@@ -5,11 +5,10 @@ import { useApp } from "../providers";
 import { BottomNav, PageHeader } from "../components";
 import { BgFx, Splash } from "../page";
 import { scorePick, fmtDT, LOCK_MS, renderFlag } from "@/lib/scoring";
-import { Goal, Clock, Lock, Check, CalendarDays, Loader2 } from "lucide-react";
-import { jogosDeTesteMock } from "../../jogosTeste";
+import { Goal, Clock, Lock, Check, CalendarDays, Loader2, Copy } from "lucide-react";
 
 export default function JogosPage() {
-  const { user, apelido, loading, supabase, MODO_TESTE } = useApp();
+  const { user, profile, apelido, loading, supabase, loadProfile } = useApp();
   const router = useRouter();
   const [matches, setMatches] = useState([]);
   const [picks, setPicks]     = useState({}); // { match_id: {score_a, score_b} }
@@ -21,14 +20,8 @@ export default function JogosPage() {
   const loadData = useCallback(async () => {
     if (!user) return;
 
-    if (MODO_TESTE) {
-      setMatches(jogosDeTesteMock);
-      const localPicksRaw = localStorage.getItem("picks_teste");
-      const localPicks = localPicksRaw ? JSON.parse(localPicksRaw) : {};
-      setPicks(localPicks);
-      setFetching(false);
-      return;
-    }
+    // Atualiza as informações do perfil do participante em tempo real a cada refresh de dados para checar status de pix_aprovado
+    await loadProfile(user.id);
 
     const [{ data: ms }, { data: ps }] = await Promise.all([
       supabase.from("matches").select("*").order("match_datetime"),
@@ -39,7 +32,7 @@ export default function JogosPage() {
     for (const p of ps ?? []) map[p.match_id] = { score_a: p.score_a, score_b: p.score_b };
     setPicks(map);
     setFetching(false);
-  }, [user, supabase, MODO_TESTE]);
+  }, [user, supabase, loadProfile]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -47,15 +40,6 @@ export default function JogosPage() {
 
   const savePick = async (matchId, a, b) => {
     const pa = Number(a); const pb = Number(b);
-
-    if (MODO_TESTE) {
-      setPicks((prev) => {
-        const updated = { ...prev, [matchId]: { score_a: pa, score_b: pb } };
-        localStorage.setItem("picks_teste", JSON.stringify(updated));
-        return updated;
-      });
-      return;
-    }
 
     await supabase.from("picks").upsert(
       { profile_id: user.id, match_id: matchId, score_a: pa, score_b: pb, updated_at: new Date().toISOString() },
@@ -100,68 +84,113 @@ export default function JogosPage() {
     <div className="min-h-screen relative">
       <BgFx />
       <div className="relative max-w-3xl mx-auto px-4 pb-36">
+        
         <PageHeader 
           title="Jogos" 
           sub={`Fala, ${apelido}! Hora de mandar seus palpites na Copa.`} 
           icon={<Goal size={22} strokeWidth={2.5} />} 
         />
 
-        {/* Alerta de palpites ausentes */}
-        {missingPicksCount > 0 && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-amber-500/5 animate-pulse">
-            <span className="text-base">⚠️</span>
-            <span>Atenção: Você tem <b>{missingPicksCount}</b> jogo{missingPicksCount !== 1 ? "s" : ""} aberto{missingPicksCount !== 1 ? "s" : ""} sem palpite! Preencha seus palpites abaixo para pontuar.</span>
-          </div>
-        )}
-
-        {/* Filtro horizontal de Categorias / Grupos */}
-        {matches.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-4 mb-6 -mx-4 px-4 select-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-            {sortedCategories.map((cat) => {
-              const active = selectedGroup === cat;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedGroup(cat)}
-                  className={`whitespace-nowrap px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-full border transition-all duration-200 ${
-                    active 
-                      ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-[#07060f] border-lime-400/20 shadow-md shadow-lime-400/10 scale-105" 
-                      : "bg-white/5 text-white/50 border-white/5 hover:text-white hover:bg-white/10"
-                  }`}
+        {/* Validação de Acesso: Pix Aprovado */}
+        {profile?.pix_aprovado === false ? (
+          <div className="glass-panel rounded-3xl p-8 border border-white/10 relative overflow-hidden shadow-2xl animate-fade-in text-center py-12">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/[0.03] rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/[0.02] rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="mx-auto w-16 h-16 rounded-3xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(234,179,8,0.1)]">
+              <span className="text-3xl select-none">🔒</span>
+            </div>
+            
+            <h2 className="font-display text-2xl sm:text-3xl text-white mb-4 tracking-tight max-w-xl mx-auto leading-tight">
+              🔒 Libere Seus Palpites e participe do Bolão da Vidros!
+            </h2>
+            <p className="text-white/60 text-sm max-w-md mx-auto leading-relaxed font-medium mb-8">
+              Ative seu Bolão agora! Faça um Pix de apenas R$10,00 e garanta sua vaga para mostrar quem entende mais de futebol! Seus palpites serão liberados instantaneamente após a confirmação do administrador.
+            </p>
+            
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 max-w-md mx-auto space-y-4">
+              <div className="py-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block mb-1">Chave Pix</span>
+                <span className="font-display text-xl sm:text-2xl text-lime-400 select-all font-extrabold tracking-wide">12997380773</span>
+              </div>
+              <div className="border-t border-white/5 pt-4">
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText("12997380773");
+                    alert("Chave Pix copiada para a área de transferência!");
+                  }}
+                  className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold py-3.5 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-xs uppercase tracking-wider shadow-lg shadow-yellow-400/10"
                 >
-                  {cat}
+                  <Copy size={16} strokeWidth={3} />
+                  Copiar Chave Pix
                 </button>
-              );
-            })}
-          </div>
-        )}
-
-        {fetching ? (
-          <div className="flex justify-center mt-20"><Loader2 className="animate-spin text-lime-400" size={36} /></div>
-        ) : matches.length === 0 ? (
-          <div className="text-center mt-20 text-white/30 glass-panel rounded-3xl p-10 border border-white/5">
-            <CalendarDays size={48} className="mx-auto mb-4 text-white/10" />
-            <p className="font-extrabold text-lg text-white/70">Nenhum jogo cadastrado</p>
-            <p className="text-sm mt-1 max-w-md mx-auto text-white/40">O administrador do bolão precisa importar os jogos da Copa do Mundo.</p>
-          </div>
-        ) : filteredMatches.length === 0 ? (
-          <div className="text-center mt-16 text-white/35 py-10">
-            <p className="font-bold">Nenhum jogo nesta categoria no momento.</p>
-          </div>
-        ) : (
-          Object.entries(grouped).map(([phase, ms]) => (
-            <div key={phase} className="mb-8">
-              <h2 className="font-display text-xl text-gradient-neon mb-4 border-b border-white/5 pb-2 flex items-center justify-between">
-                <span>{phase}</span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white/5 text-white/40">{ms.length} jogo{ms.length !== 1 ? "s" : ""}</span>
-              </h2>
-              <div className="space-y-4">
-                {ms.map((m) => (
-                  <MatchCard key={m.id} match={m} pick={picks[m.id]} onSave={savePick} />
-                ))}
               </div>
             </div>
-          ))
+            
+            <p className="text-[10px] text-white/35 mt-6 font-bold uppercase tracking-wider">
+              A liberação é manual e costuma levar menos de 10 minutos!
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Alerta de palpites ausentes */}
+            {missingPicksCount > 0 && (
+              <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-amber-500/5 animate-pulse">
+                <span className="text-base">⚠️</span>
+                <span>Atenção: Você tem <b>{missingPicksCount}</b> jogo{missingPicksCount !== 1 ? "s" : ""} aberto{missingPicksCount !== 1 ? "s" : ""} sem palpite! Preencha seus palpites abaixo para pontuar.</span>
+              </div>
+            )}
+
+            {/* Filtro horizontal de Categorias / Grupos */}
+            {matches.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-4 mb-6 -mx-4 px-4 select-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                {sortedCategories.map((cat) => {
+                  const active = selectedGroup === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedGroup(cat)}
+                      className={`whitespace-nowrap px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-full border transition-all duration-200 ${
+                        active 
+                          ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-[#07060f] border-lime-400/20 shadow-md shadow-lime-400/10 scale-105" 
+                          : "bg-white/5 text-white/50 border-white/5 hover:text-white hover:bg-white/10"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {fetching ? (
+              <div className="flex justify-center mt-20"><Loader2 className="animate-spin text-lime-400" size={36} /></div>
+            ) : matches.length === 0 ? (
+              <div className="text-center mt-20 text-white/30 glass-panel rounded-3xl p-10 border border-white/5">
+                <CalendarDays size={48} className="mx-auto mb-4 text-white/10" />
+                <p className="font-extrabold text-lg text-white/70">Nenhum jogo cadastrado</p>
+                <p className="text-sm mt-1 max-w-md mx-auto text-white/40">O administrador do bolão precisa importar os jogos da Copa do Mundo.</p>
+              </div>
+            ) : filteredMatches.length === 0 ? (
+              <div className="text-center mt-16 text-white/35 py-10">
+                <p className="font-bold">Nenhum jogo nesta categoria no momento.</p>
+              </div>
+            ) : (
+              Object.entries(grouped).map(([phase, ms]) => (
+                <div key={phase} className="mb-8">
+                  <h2 className="font-display text-xl text-gradient-neon mb-4 border-b border-white/5 pb-2 flex items-center justify-between">
+                    <span>{phase}</span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white/5 text-white/40">{ms.length} jogo{ms.length !== 1 ? "s" : ""}</span>
+                  </h2>
+                  <div className="space-y-4">
+                    {ms.map((m) => (
+                      <MatchCard key={m.id} match={m} pick={picks[m.id]} onSave={savePick} />
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </>
         )}
       </div>
       <BottomNav />
