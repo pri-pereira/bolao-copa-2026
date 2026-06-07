@@ -13,7 +13,7 @@ export default function JogosPage() {
   const [matches, setMatches] = useState([]);
   const [picks, setPicks]     = useState({}); // { match_id: {score_a, score_b} }
   const [fetching, setFetching] = useState(true);
-  const [selectedGroup, setSelectedGroup] = useState("Todos");
+  const [categoriaAtiva, setCategoriaAtiva] = useState("Jogos do dia");
 
   useEffect(() => { if (!loading && !user) router.push("/"); }, [user, loading]);
 
@@ -48,20 +48,48 @@ export default function JogosPage() {
     setPicks((prev) => ({ ...prev, [matchId]: { score_a: pa, score_b: pb } }));
   };
 
-  // Ordenação lógica das fases e grupos
-  const sortedCategories = ["Todos", ...Array.from(new Set(matches.map((m) => m.group_name || "Copa do Mundo 2026"))).sort((a, b) => {
-    const order = {
-      "Grupo A": 1, "Grupo B": 2, "Grupo C": 3, "Grupo D": 4, "Grupo E": 5, "Grupo F": 6,
-      "Grupo G": 7, "Grupo H": 8, "Grupo I": 9, "Grupo J": 10, "Grupo K": 11, "Grupo L": 12,
-      "Dezesseis-avos": 13, "Oitavas": 14, "Quartas": 15, "Semifinal": 16, "Disputa de 3º Lugar": 17, "Final": 18
-    };
-    return (order[a] || 99) - (order[b] || 99);
-  })];
+  const categorias = [
+    'Jogos do dia', 
+    'Todos', 
+    'Grupos', 
+    'fase Mata-Mata', 
+    'Oitavas de Final', 
+    'Quartas de Final', 
+    'Semi Final', 
+    '3º e 4º Lugar', 
+    'Final'
+  ];
 
-  // Filtra jogos
-  const filteredMatches = selectedGroup === "Todos"
-    ? matches
-    : matches.filter((m) => m.group_name === selectedGroup);
+  const hoje = new Date();
+
+  const filteredMatches = matches.filter((m) => {
+    const dataJogo = new Date(m.match_datetime);
+
+    switch (categoriaAtiva) {
+      case 'Jogos do dia':
+        return dataJogo.getFullYear() === hoje.getFullYear() &&
+               dataJogo.getMonth() === hoje.getMonth() &&
+               dataJogo.getDate() === hoje.getDate();
+      case 'Todos':
+        return true;
+      case 'Grupos':
+        return m.group_name && m.group_name.startsWith("Grupo");
+      case 'fase Mata-Mata':
+        return m.group_name && !m.group_name.startsWith("Grupo");
+      case 'Oitavas de Final':
+        return m.group_name === 'Oitavas';
+      case 'Quartas de Final':
+        return m.group_name === 'Quartas';
+      case 'Semi Final':
+        return m.group_name === 'Semifinal';
+      case '3º e 4º Lugar':
+        return m.group_name === 'Disputa de 3º Lugar';
+      case 'Final':
+        return m.group_name === 'Final';
+      default:
+        return true;
+    }
+  });
 
   const grouped = groupByPhase(filteredMatches);
 
@@ -143,25 +171,25 @@ export default function JogosPage() {
 
             {/* Filtro horizontal de Categorias / Grupos */}
             {matches.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto pb-4 mb-6 -mx-4 px-4 select-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                {sortedCategories.map((cat) => {
-                  const active = selectedGroup === cat;
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedGroup(cat)}
-                      className={`whitespace-nowrap px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-full border transition-all duration-200 ${
-                        active 
-                          ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-[#07060f] border-lime-400/20 shadow-md shadow-lime-400/10 scale-105" 
-                          : "bg-white/5 text-white/50 border-white/5 hover:text-white hover:bg-white/10"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+               <div className="flex gap-2 overflow-x-auto pb-4 mb-6 -mx-4 px-4 select-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                 {categorias.map((cat) => {
+                   const active = categoriaAtiva === cat;
+                   return (
+                     <button
+                       key={cat}
+                       onClick={() => setCategoriaAtiva(cat)}
+                       className={`whitespace-nowrap px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-full border transition-all duration-200 ${
+                         active 
+                           ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-[#07060f] border-lime-400/20 shadow-md shadow-lime-400/10 scale-105" 
+                           : "bg-white/5 text-white/50 border-white/5 hover:text-white hover:bg-white/10"
+                       }`}
+                     >
+                       {cat}
+                     </button>
+                   );
+                 })}
+               </div>
+             )}
 
             {fetching ? (
               <div className="flex justify-center mt-20"><Loader2 className="animate-spin text-lime-400" size={36} /></div>
@@ -173,7 +201,11 @@ export default function JogosPage() {
               </div>
             ) : filteredMatches.length === 0 ? (
               <div className="text-center mt-16 text-white/35 py-10">
-                <p className="font-bold">Nenhum jogo nesta categoria no momento.</p>
+                <p className="font-bold">
+                  {categoriaAtiva === 'Jogos do dia' 
+                    ? "Nenhum jogo agendado para o dia de hoje." 
+                    : "Nenhum jogo nesta categoria no momento."}
+                </p>
               </div>
             ) : (
               Object.entries(grouped).map(([phase, ms]) => (
