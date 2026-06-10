@@ -25,7 +25,23 @@ export function AppProvider({ children }) {
       .select("*")
       .eq("id", uid)
       .single();
-    setProfile(data ?? null);
+    
+    let profileData = data ?? null;
+    try {
+      const checkRes = await fetch(`/api/auth/check-approval?uid=${uid}`);
+      const { approved, is_admin } = await checkRes.json();
+      if (approved) {
+        profileData = {
+          ...(profileData || { id: uid, apelido: "Jogador", avatar: "1889-hamster2.png" }),
+          pix_aprovado: true,
+          is_admin: is_admin || profileData?.is_admin || false
+        };
+      }
+    } catch (e) {
+      // Ignora erro local em produção
+    }
+
+    setProfile(profileData);
   }, [supabase]);
 
   // Função para exibir notificações Toast

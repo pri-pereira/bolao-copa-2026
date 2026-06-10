@@ -1,197 +1,148 @@
-"use client";
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useApp } from "../providers";
-import { BottomNav, PageHeader } from "../components";
-import { BgFx, Splash } from "../page";
-import { fmtDT, renderFlag } from "@/lib/scoring";
-import { ShieldCheck, Download, Plus, RefreshCw, X, Loader2, Check } from "lucide-react";
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase'; // Ajuste o caminho do seu cliente supabase se necessário
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
-  const { user, profile, loading, supabase } = useApp();
+  const [usuarios, setUsuarios] = useState([]);
+  const [filtro, setFiltro] = useState('Todos'); // Todos, Pagos, Aguardando
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
-  const [matches, setMatches] = useState([]);
-  const [fetching, setFetching] = useState(true);
 
-  // Form de jogo manual
-  const [form, setForm] = useState({ team_a: "", team_b: "", flag_a: "", flag_b: "", match_datetime: "", group_name: "" });
-  const [busy, setBusy] = useState(false);
-  const [log, setLog]   = useState("");
-
+  // 1. Verificar Segurança de Admin
   useEffect(() => {
-    if (!loading && (!user || !profile?.is_admin)) router.push("/jogos");
-  }, [user, profile, loading]);
+    async function checarAdmin() {
+      const { data: { user } } = await supabase.auth.getUser();
 
-  const loadMatches = useCallback(async () => {
-    const { data } = await supabase.from("matches").select("*").order("match_datetime");
-    setMatches(data ?? []); setFetching(false);
-  }, [supabase]);
-
-  useEffect(() => { loadMatches(); }, [loadMatches]);
-
-  // ---- Importar tabela da Copa da API-Football ----
-  const importSchedule = async () => {
-    setBusy(true); setLog("Importando tabela da Copa 2026...");
-    try {
-      const res = await fetch("/api/admin/import-schedule", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
-      });
-      const json = await res.json();
-      if (json.error) { setLog("Erro: " + json.error); }
-      else { setLog(`${json.imported} jogos importados!`); await loadMatches(); }
-    } catch (e) { setLog("Erro de conexão: " + e.message); }
-    setBusy(false);
-  };
-
-  // ---- Forçar atualização de resultados ----
-  const forceUpdate = async () => {
-    setBusy(true); setLog("Buscando resultados na API-Football...");
-    try {
-      const res = await fetch("/api/cron/update-results", {
-        headers: { "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
-      });
-      const json = await res.json();
-      setLog(json.error ? "Erro: " + json.error : `${json.updated ?? 0} resultado(s) atualizado(s).`);
-      await loadMatches();
-    } catch (e) { setLog("Erro: " + e.message); }
-    setBusy(false);
-  };
-
-  // ---- Adicionar jogo manualmente ----
-  const addMatch = async () => {
-    if (!form.team_a || !form.team_b || !form.match_datetime) {
-      setLog("Preencha os dois times e a data/hora."); return;
+      // Defina aqui o seu e-mail de administrador ou a flag do banco
+      if (!user || user.email !== 'priscillasantosp24@gmail.com') {
+        router.push('/jogos'); // Expulsa o usuário comum para a página de jogos
+      } else {
+        setIsAdmin(true);
+        carregarDados();
+      }
     }
-    setBusy(true);
-    const { error } = await supabase.from("matches").insert({
-      ...form,
-      match_datetime: new Date(form.match_datetime).toISOString(),
-    });
-    if (error) { setLog("Erro: " + error.message); }
-    else { setLog("Jogo adicionado."); setForm({ team_a: "", team_b: "", flag_a: "", flag_b: "", match_datetime: "", group_name: "" }); await loadMatches(); }
-    setBusy(false);
-  };
+    checarAdmin();
+  }, []);
 
-  // ---- Atualizar placar manualmente ----
-  const setScore = async (id, field, val) => {
-    await supabase.from("matches").update({ [field]: val === "" ? null : Number(val) }).eq("id", id);
-    setMatches((prev) => prev.map((m) => m.id === id ? { ...m, [field]: val === "" ? null : Number(val) } : m));
-  };
+  // 2. Buscar participantes do banco de dados real
+  async function carregarDados() {
+    setLoading(true);
+    // Ajuste 'profiles' para o nome exato da sua tabela de usuários se for diferente
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('name', { ascending: true });
 
-  const setFinished = async (id, finished) => {
-    await supabase.from("matches").update({ finished }).eq("id", id);
-    setMatches((prev) => prev.map((m) => m.id === id ? { ...m, finished } : m));
-  };
+    if (!error && data) {
+      setUsuarios(data);
+    }
+    setLoading(false);
+  }
 
-  const removeMatch = async (id) => {
-    await supabase.from("matches").delete().eq("id", id);
-    setMatches((prev) => prev.filter((m) => m.id !== id));
-  };
+  // 3. Função para Alternar/Aprovar o Pix
+  async function alternarStatusPix(id, statusAtual) {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ pixAprovado: !statusAtual })
+      .eq('id', id);
 
-  if (loading || !profile) return <Splash />;
+    if (!error) {
+      // Atualiza o estado local na hora para os contadores e listas mudarem visualmente
+      setUsuarios(prev =>
+        prev.map(u => (u.id === id ? { ...u, pixAprovado: !statusAtual } : u))
+      );
+    } else {
+      alert('Erro ao atualizar status do Pix no Supabase.');
+    }
+  }
+
+  // CÁLCULO DOS CONTADORES (Cards Resumo)
+  const totalInscritos = usuarios.length;
+  const totalPagantes = usuarios.filter(u => u.pixAprovado === true).length;
+  const totalPendentes = usuarios.filter(u => !u.pixAprovado).length;
+
+  // FILTRAGEM DA LISTA
+  const usuariosExibidos = usuarios.filter(u => {
+    if (filtro === 'Pagos') return u.pixAprovado === true;
+    if (filtro === 'Aguardando') return !u.pixAprovado;
+    return true; // 'Todos'
+  });
+
+  if (!isAdmin || loading) {
+    return <div style={{ color: '#fff', padding: '20px' }}>Carregando Painel Administrativo...</div>;
+  }
 
   return (
-    <div className="min-h-screen relative">
-      <BgFx />
-      <div className="relative max-w-3xl mx-auto px-4 pb-36">
-        <PageHeader title="Admin" sub="Painel de controle de jogos e resultados" icon={<ShieldCheck size={22} strokeWidth={2.5} />} />
+    <div style={{ padding: '20px', color: '#fff', backgroundColor: '#0f111a', minHeight: '100vh' }}>
 
-        {/* Ações principais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-8">
-          <ActionBtn icon={<Download size={18} />} label="Importar tabela Copa 2026 da API" color="emerald" onClick={importSchedule} busy={busy} />
-          <ActionBtn icon={<RefreshCw size={18} />} label="Forçar busca de resultados agora" color="sky" onClick={forceUpdate} busy={busy} />
+      <h2>Painel de Controle do Administrador</h2>
+      <p style={{ color: '#888' }}>Gerencie as inscrições e liberações do Pix Estático</p>
+
+      {/* 1. CARDS RESUMO */}
+      <div style={{ display: 'flex', gap: '15px', margin: '20px 0' }}>
+        <div style={{ flex: 1, background: '#1f2335', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #41a5f5' }}>
+          <span style={{ fontSize: '14px', color: '#aaa' }}>Inscritos</span>
+          <h3 style={{ fontSize: '24px', margin: '5px 0' }}>{totalInscritos}</h3>
         </div>
-        {log && (
-          <div className="mb-6 text-sm font-medium text-white/70 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 flex items-center gap-2">
-            {busy ? <Loader2 size={16} className="animate-spin text-lime-400" /> : <Check size={16} className="text-lime-400" />}
-            {log}
-          </div>
-        )}
-
-        {/* Adicionar jogo manualmente */}
-        <div className="glass-panel rounded-3xl p-5 mb-8 relative overflow-hidden">
-          <p className="font-extrabold text-white mb-4 text-sm uppercase tracking-wider text-white/70">Adicionar jogo manualmente</p>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <Field label="Time A" value={form.team_a} onChange={(v) => setForm(f => ({ ...f, team_a: v }))} placeholder="Brasil" />
-            <Field label="🏳️ Bandeira A (emoji)" value={form.flag_a} onChange={(v) => setForm(f => ({ ...f, flag_a: v }))} placeholder="🇧🇷" />
-            <Field label="Time B" value={form.team_b} onChange={(v) => setForm(f => ({ ...f, team_b: v }))} placeholder="Argentina" />
-            <Field label="🏳️ Bandeira B (emoji)" value={form.flag_b} onChange={(v) => setForm(f => ({ ...f, flag_b: v }))} placeholder="🇦🇷" />
-            <label className="block col-span-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-white/40 ml-1">Data e hora</span>
-              <input type="datetime-local" value={form.match_datetime}
-                onChange={(e) => setForm(f => ({ ...f, match_datetime: e.target.value }))} className="mt-1.5 w-full" />
-            </label>
-            <Field label="Fase / Grupo" value={form.group_name} onChange={(v) => setForm(f => ({ ...f, group_name: v }))} placeholder="Grupo A" />
-          </div>
-          <button onClick={addMatch} disabled={busy}
-            className="w-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-extrabold py-3.5 rounded-2xl transition-all duration-250 flex items-center justify-center gap-2">
-            <Plus size={18} /> Adicionar jogo
-          </button>
+        <div style={{ flex: 1, background: '#1f2335', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #9ece6a' }}>
+          <span style={{ fontSize: '14px', color: '#aaa' }}>Pagantes</span>
+          <h3 style={{ fontSize: '24px', margin: '5px 0', color: '#9ece6a' }}>{totalPagantes}</h3>
         </div>
+        <div style={{ flex: 1, background: '#1f2335', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #f7768e' }}>
+          <span style={{ fontSize: '14px', color: '#aaa' }}>Faltam Pagar</span>
+          <h3 style={{ fontSize: '24px', margin: '5px 0', color: '#f7768e' }}>{totalPendentes}</h3>
+        </div>
+      </div>
 
-        {/* Lista de jogos */}
-        {fetching ? (
-          <div className="flex justify-center mt-10"><Loader2 className="animate-spin text-lime-400" size={32} /></div>
+      {/* 2. BOTÕES DE FILTRO RÁPIDO */}
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+        <button onClick={() => setFiltro('Todos')} style={{ padding: '8px 16px', borderRadius: '20px', border: 'none', background: filtro === 'Todos' ? '#9ece6a' : '#24283b', color: filtro === 'Todos' ? '#000' : '#fff', cursor: 'pointer' }}>Todos</button>
+        <button onClick={() => setFiltro('Pagos')} style={{ padding: '8px 16px', borderRadius: '20px', border: 'none', background: filtro === 'Pagos' ? '#9ece6a' : '#24283b', color: filtro === 'Pagos' ? '#000' : '#fff', cursor: 'pointer' }}>Pagos</button>
+        <button onClick={() => setFiltro('Aguardando')} style={{ padding: '8px 16px', borderRadius: '20px', border: 'none', background: filtro === 'Aguardando' ? '#9ece6a' : '#24283b', color: filtro === 'Aguardando' ? '#000' : '#fff', cursor: 'pointer' }}>Aguardando Pagamento</button>
+      </div>
+
+      {/* 3. LISTAGEM DOS PARTICIPANTES */}
+      <div style={{ background: '#1f2335', borderRadius: '8px', padding: '15px' }}>
+        {usuariosExibidos.length === 0 ? (
+          <p style={{ color: '#888' }}>Nenhum usuário encontrado para este filtro.</p>
         ) : (
-          <div className="space-y-3">
-            <p className="text-[11px] text-white/40 font-extrabold uppercase tracking-wider mb-2 ml-1">{matches.length} jogos cadastrados</p>
-            {matches.map((m) => (
-              <div key={m.id} className="glass-panel rounded-2xl p-4 border border-white/5 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-extrabold text-white flex items-center gap-1.5">
-                    {renderFlag(m.flag_a, "w-6 h-4 object-cover rounded shadow-sm inline-block align-middle mr-1.5")} {m.team_a} <span className="text-white/30 text-xs">×</span> {m.team_b} {renderFlag(m.flag_b, "w-6 h-4 object-cover rounded shadow-sm inline-block align-middle ml-1.5")}
-                  </span>
-                  <button onClick={() => removeMatch(m.id)} className="text-white/30 hover:text-red-400 transition-colors p-1 hover:bg-white/5 rounded-lg">
-                    <X size={16} />
-                  </button>
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                  <span className="text-xs text-white/40 font-medium">{fmtDT(m.match_datetime)} {m.group_name ? `• ${m.group_name}` : ""}</span>
-                  <div className="flex items-center gap-2">
-                    <input type="number" min="0" placeholder="?" value={m.score_a ?? ""}
-                      onChange={(e) => setScore(m.id, "score_a", e.target.value)}
-                      className="w-12 h-9 text-center text-lime-400 font-display text-lg p-0 border border-white/10 focus:border-lime-400" />
-                    <span className="text-white/20 text-xs font-bold">×</span>
-                    <input type="number" min="0" placeholder="?" value={m.score_b ?? ""}
-                      onChange={(e) => setScore(m.id, "score_b", e.target.value)}
-                      className="w-12 h-9 text-center text-lime-400 font-display text-lg p-0 border border-white/10 focus:border-lime-400" />
-                    <button onClick={() => setFinished(m.id, !m.finished)}
-                      className={`text-[11px] px-3 py-2 rounded-xl font-bold uppercase tracking-wider transition ${m.finished ? "bg-lime-400 text-[#07060f]" : "bg-white/5 text-white/50 hover:bg-white/10 border border-white/5 hover:text-white"}`}>
-                      {m.finished ? "✔ Fim" : "Encerrar"}
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #3b4261', color: '#aaa' }}>
+                <th style={{ padding: '10px' }}>Nome</th>
+                <th style={{ padding: '10px' }}>E-mail</th>
+                <th style={{ padding: '10px' }}>Status</th>
+                <th style={{ padding: '10px' }}>Ação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {usuariosExibidos.map(user => (
+                <tr key={user.id} style={{ borderBottom: '1px solid #24283b' }}>
+                  <td style={{ padding: '12px 10px' }}>{user.name || 'Sem nome'}</td>
+                  <td style={{ padding: '12px 10px' }}>{user.email}</td>
+                  <td style={{ padding: '12px 10px' }}>
+                    <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', background: user.pixAprovado ? '#2e3c25' : '#3c2529', color: user.pixAprovado ? '#9ece6a' : '#f7768e' }}>
+                      {user.pixAprovado ? 'Pago' : 'Aguardando'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 10px' }}>
+                    <button
+                      onClick={() => alternarStatusPix(user.id, user.pixAprovado)}
+                      style={{ padding: '6px 12px', borderRadius: '4px', border: 'none', background: user.pixAprovado ? '#f7768e' : '#9ece6a', color: '#000', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                      {user.pixAprovado ? 'Remover Acesso' : 'Marcar como Pago'}
                     </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
-      <BottomNav />
+
     </div>
-  );
-}
-
-function ActionBtn({ icon, label, color, onClick, busy }) {
-  const colors = {
-    emerald: "bg-lime-400/10 hover:bg-lime-400/20 text-lime-300 border-lime-400/20",
-    sky:     "bg-orange-400/10 hover:bg-orange-400/20 text-orange-300 border-orange-400/20",
-  };
-  return (
-    <button onClick={onClick} disabled={busy}
-      className={`w-full border font-extrabold py-3.5 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 hover:-translate-y-0.5 active:translate-y-0 ${colors[color]}`}>
-      {busy ? <Loader2 className="animate-spin" size={18} /> : icon}
-      {label}
-    </button>
-  );
-}
-
-function Field({ label, value, onChange, placeholder }) {
-  return (
-    <label className="block">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-white/40 ml-1">{label}</span>
-      <input type="text" value={value} onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder} className="mt-1.5 w-full" />
-    </label>
   );
 }
