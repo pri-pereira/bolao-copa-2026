@@ -36,10 +36,8 @@ export default function JogosPage() {
   }, [user, supabase, loadProfile]);
 
   useEffect(() => {
-    const usuário = { pixAprovado: profile?.pix_aprovado };
-    console.log("Status Pix do Usuário:", usuário.pixAprovado);
     loadData();
-  }, [loadData, profile]);
+  }, [loadData]);
 
   if (loading || !user) return <Splash />;
 
@@ -307,7 +305,7 @@ function MatchCard({ match: m, pick, onSave }) {
     setA(pick?.score_a ?? 0); 
     setB(pick?.score_b ?? 0); 
     setIsEditing(!pick);
-  }, [pick]);
+  }, [pick?.score_a, pick?.score_b]);
 
   const pts = m.finished ? scorePick(pick ?? null, m) : null;
 
