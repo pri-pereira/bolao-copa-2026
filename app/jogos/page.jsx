@@ -14,6 +14,7 @@ export default function JogosPage() {
   const [picks, setPicks]     = useState({}); // { match_id: {score_a, score_b} }
   const [fetching, setFetching] = useState(true);
   const [categoriaAtiva, setCategoriaAtiva] = useState("Jogos do dia");
+  const [subgrupoAtivo, setSubgrupoAtivo] = useState("Todos");
 
   useEffect(() => { if (!loading && !user) router.push("/"); }, [user, loading]);
 
@@ -77,7 +78,9 @@ export default function JogosPage() {
       case 'Todos':
         return true;
       case 'Grupos':
-        return m.group_name && m.group_name.startsWith("Grupo");
+        if (!m.group_name || !m.group_name.startsWith("Grupo")) return false;
+        if (subgrupoAtivo === "Todos") return true;
+        return m.group_name === `Grupo ${subgrupoAtivo}`;
       case 'fase Mata-Mata':
         return m.group_name && !m.group_name.startsWith("Grupo");
       case 'Oitavas de Final':
@@ -123,9 +126,13 @@ export default function JogosPage() {
           icon={<Goal size={22} strokeWidth={2.5} />} 
         />
 
-        {/* Validação de Acesso: Pix Aprovado */}
-        {!profile || profile.pix_aprovado !== true ? (
-          <div className="glass-panel rounded-3xl p-8 border border-white/10 relative overflow-hidden shadow-2xl animate-fade-in text-center py-12">
+        {/* Validação de Acesso: Pix Aprovado (Admin tem passe livre) */}
+        {(() => {
+          const isAdmin = profile?.is_admin || user?.email === 'priscillasantosp24@gmail.com';
+          const isLiberado = profile?.pix_aprovado === true || isAdmin;
+
+          return !isLiberado ? (
+            <div className="glass-panel rounded-3xl p-8 border border-white/10 relative overflow-hidden shadow-2xl animate-fade-in text-center py-12">
             <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/[0.03] rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/[0.02] rounded-full blur-3xl pointer-events-none" />
             
@@ -179,7 +186,7 @@ export default function JogosPage() {
               A liberação é manual e costuma levar menos de 10 minutos!
             </p>
           </div>
-        ) : (
+          ) : (
           <>
             {/* Alerta de palpites ausentes */}
             {missingPicksCount > 0 && (
@@ -189,15 +196,18 @@ export default function JogosPage() {
               </div>
             )}
 
-            {/* Filtro horizontal de Categorias / Grupos */}
+            {/* Filtro horizontal de Categorias */}
             {matches.length > 0 && (
-               <div className="flex gap-2 overflow-x-auto pb-4 mb-6 -mx-4 px-4 select-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+               <div className="flex gap-2 overflow-x-auto pb-4 mb-2 -mx-4 px-4 select-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                  {categorias.map((cat) => {
                    const active = categoriaAtiva === cat;
                    return (
                      <button
                        key={cat}
-                       onClick={() => setCategoriaAtiva(cat)}
+                       onClick={() => {
+                         setCategoriaAtiva(cat);
+                         if (cat !== "Grupos") setSubgrupoAtivo("Todos");
+                       }}
                        className={`whitespace-nowrap px-4 py-2 text-xs font-extrabold uppercase tracking-wider rounded-full border transition-all duration-200 ${
                          active 
                            ? "bg-gradient-to-r from-lime-400 to-emerald-500 text-[#07060f] border-lime-400/20 shadow-md shadow-lime-400/10 scale-105" 
@@ -210,6 +220,28 @@ export default function JogosPage() {
                  })}
                </div>
              )}
+
+            {/* Submenu de Grupos */}
+            {categoriaAtiva === "Grupos" && matches.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-4 mb-4 -mx-4 px-4 select-none scrollbar-none animate-fade-in">
+                {["Todos", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"].map((letra) => {
+                  const active = subgrupoAtivo === letra;
+                  return (
+                    <button
+                      key={letra}
+                      onClick={() => setSubgrupoAtivo(letra)}
+                      className={`whitespace-nowrap px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all duration-200 border ${
+                        active 
+                          ? "bg-white/20 text-white border-white/10 shadow-sm" 
+                          : "bg-white/5 text-white/40 border-white/5 hover:text-white hover:bg-white/10"
+                      }`}
+                    >
+                      {letra === "Todos" ? "Todos" : `Grupo ${letra}`}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {fetching ? (
               <div className="flex justify-center mt-20"><Loader2 className="animate-spin text-lime-400" size={36} /></div>
@@ -243,7 +275,8 @@ export default function JogosPage() {
               ))
             )}
           </>
-        )}
+          );
+        })()}
       </div>
       <BottomNav />
     </div>
