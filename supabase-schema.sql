@@ -110,3 +110,27 @@ create trigger on_auth_user_created
 -- ============================================================
 -- update public.profiles set is_admin = true
 -- where id = (select id from auth.users where email = 'seu@email.com');
+
+-- ============================================================
+-- 4. Tabela de Resenha (Chat)
+-- ============================================================
+create table public.resenha (
+  id serial primary key,
+  user_name text not null,
+  mensagem text not null,
+  created_at timestamptz default now()
+);
+
+-- Ativação do RLS na tabela resenha
+alter table public.resenha enable row level security;
+
+-- Política para leitura das mensagens (apenas usuários autenticados)
+create policy "resenha_select" on public.resenha for select using (
+  auth.role() = 'authenticated'
+);
+
+-- Política para envio de mensagens (apenas usuários autenticados)
+create policy "resenha_insert" on public.resenha for insert with check (
+  auth.role() = 'authenticated'
+);
+
