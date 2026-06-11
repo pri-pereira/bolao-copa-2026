@@ -2,9 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-const APIFOOTBALL_BASE = "https://v3.football.api-sports.io";
-const WC_LEAGUE_ID     = 1;    // FIFA World Cup na API-Football
-const WC_SEASON        = 2026;
+const FOOTBALL_DATA_BASE = "https://api.football-data.org/v4";
 
 export async function GET(request) {
   // Usa service role para bypassar RLS
@@ -53,13 +51,16 @@ export async function GET(request) {
 
     let updatedCount = 0;
 
-    // 2. Busca todos os jogos finalizados da Copa 2026 de uma vez (mais eficiente)
+    // 2. Busca todos os jogos da Copa de uma vez na API football-data.org
     const res = await fetch(
-      `${APIFOOTBALL_BASE}/fixtures?league=${WC_LEAGUE_ID}&season=${WC_SEASON}&status=FT-AET-PEN`,
-      { headers: { "x-apisports-key": process.env.APIFOOTBALL_KEY } }
+      `${FOOTBALL_DATA_BASE}/competitions/WC/matches`,
+      { 
+        headers: { "X-Auth-Token": process.env.FOOTBALL_DATA_API_KEY },
+        cache: "no-store"
+      }
     );
     const data = await res.json();
-    const fixtures = data.response ?? [];
+    const fixtures = (data.matches ?? []).filter(m => m.status === 'FINISHED');
 
     const TEAM_MAP = {
       "Brasil": "Brazil", "Alemanha": "Germany", "Espanha": "Spain", "Argentina": "Argentina",
@@ -79,12 +80,12 @@ export async function GET(request) {
 
     for (const fixture of fixtures) {
       // Tenta encontrar por api_fixture_id primeiro
-      let match = pending.find((m) => m.api_fixture_id === fixture.fixture.id);
+      let match = pending.find((m) => m.api_fixture_id === fixture.id);
 
       // Se não achar por ID, tenta encontrar traduzindo os nomes dos times
       if (!match) {
-        const apiHome = fixture.teams.home.name;
-        const apiAway = fixture.teams.away.name;
+        const apiHome = fixture.homeTeam?.name || "";
+        const apiAway = fixture.awayTeam?.name || "";
 
         match = pending.find((m) => {
           const dbHomeMapped = TEAM_MAP[m.team_a] || m.team_a;
@@ -99,8 +100,8 @@ export async function GET(request) {
 
       if (!match) continue;
 
-      const scoreA = fixture.goals.home ?? 0;
-      const scoreB = fixture.goals.away ?? 0;
+      const scoreA = fixture.score?.fullTime?.home ?? 0;
+      const scoreB = fixture.score?.fullTime?.away ?? 0;
 
       const { error: upErr } = await supabase
         .from("matches")
@@ -108,7 +109,7 @@ export async function GET(request) {
           score_a: scoreA, 
           score_b: scoreB, 
           finished: true,
-          api_fixture_id: fixture.fixture.id // Vincula para futuras atualizações
+          api_fixture_id: fixture.id // Vincula para futuras atualizações
         })
         .eq("id", match.id);
 

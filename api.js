@@ -4,7 +4,7 @@ export async function carregarJogosCopa() {
   const URL = '/api/matches-official';
 
   try {
-    const response = await fetch(URL);
+    const response = await fetch(URL, { cache: 'no-store' });
     
     if (!response.ok) {
       throw new Error(`Erro ao obter jogos do servidor: ${response.status} ${response.statusText}`);

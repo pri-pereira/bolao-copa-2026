@@ -363,7 +363,7 @@ function MatchCard({ match: m, pick, onSave }) {
           {!locked && !m.finished ? (
             <Stepper value={a} onChange={setA} disabled={!isEditing} />
           ) : (
-            <span className="font-display text-4xl text-gradient-neon mt-2">{a}</span>
+            <Stepper value={a} onChange={() => {}} disabled={true} />
           )}
         </div>
 
@@ -378,15 +378,15 @@ function MatchCard({ match: m, pick, onSave }) {
           {!locked && !m.finished ? (
             <Stepper value={b} onChange={setB} disabled={!isEditing} />
           ) : (
-            <span className="font-display text-4xl text-gradient-neon mt-2">{b}</span>
+            <Stepper value={b} onChange={() => {}} disabled={true} />
           )}
         </div>
       </div>
 
       {m.finished && (
-        <div className="mt-4 flex items-center justify-between bg-black/40 rounded-xl px-4 py-3 border border-white/5">
-          <span className="text-xs text-white/60 font-semibold uppercase tracking-wider">
-            Resultado Oficial: <b className="text-white font-display text-base ml-1">{m.score_a} × {m.score_b}</b>
+        <div className="mt-4 flex flex-col items-center justify-center bg-black/40 rounded-xl px-4 py-3 border border-white/5 gap-2">
+          <span className="text-sm text-lime-400 font-bold uppercase tracking-wider text-center">
+            Resultado Real: <b className="text-white font-display text-base ml-1">{m.team_a} {m.score_a} × {m.score_b} {m.team_b}</b>
           </span>
           <span className={`text-[11px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${pts === 3 ? "text-[#07060f] bg-lime-400 border-lime-400/30 shadow-lg shadow-lime-400/20" : pts === 1 ? "text-lime-300 bg-lime-400/10 border-lime-400/20" : "text-white/30 bg-white/5 border-white/5"}`}>
             {pts === 3 ? "🎯 Cravou +3" : pts === 1 ? "👍 Acertou +1" : "❌ 0 pts"}

@@ -16,7 +16,7 @@ export async function GET() {
   try {
     const response = await fetch(URL, {
       headers: { 'X-Auth-Token': API_KEY },
-      next: { revalidate: 300 } // Cache opcional de 5 minutos no servidor
+      cache: 'no-store'
     });
     
     if (!response.ok) {
