@@ -1,13 +1,14 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useApp } from "../providers";
-import { BottomNav, PageHeader } from "../components";
+import { BottomNav } from "../components";
 import { BgFx, Splash } from "../page";
-import { MessageSquare, Send, Loader2 } from "lucide-react";
+import { MessageSquare, Send, Loader2, Home } from "lucide-react";
+import Link from "next/link";
 
 export default function ResenhaPage() {
-  const { user, apelido, supabase, loading } = useApp();
+  const { user, apelido, avatar, supabase, loading } = useApp();
   const router = useRouter();
 
   const [messages, setMessages] = useState([]);
@@ -16,265 +17,255 @@ export default function ResenhaPage() {
   const [fetching, setFetching] = useState(true);
 
   const messagesEndRef = useRef(null);
+  const messagesAreaRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Redireciona se não estiver logado
+  // Altura do BottomNav (~80px) + barra de input (~64px) + margem (~8px)
+  const BOTTOM_OFFSET = 160;
+
   useEffect(() => {
-    if (!loading && !user) {
-      router.push("/");
-    }
+    if (!loading && !user) router.push("/");
   }, [user, loading, router]);
 
-  // Carregamento inicial das mensagens
+  // Carregamento inicial
   useEffect(() => {
     if (!user || !supabase) return;
-
     async function fetchInitialMessages() {
       try {
         const { data, error } = await supabase
           .from("resenha")
           .select("id, user_name, mensagem, created_at")
           .order("created_at", { ascending: true })
-          .limit(80);
-
-        if (error) {
-          console.error("Erro ao buscar mensagens:", error);
-          alert(`Erro ao carregar histórico: ${error.message}`);
-          return;
-        }
-
+          .limit(100);
+        if (error) { console.error("Erro ao buscar mensagens:", error); return; }
         setMessages(data ?? []);
-      } catch (err) {
-        console.error("Erro inesperado:", err);
       } finally {
         setFetching(false);
       }
     }
-
     fetchInitialMessages();
   }, [user, supabase]);
 
-  // Inscrição no Realtime do Supabase — escuta novos INSERTs na tabela resenha
+  // Realtime — novos INSERTs
   useEffect(() => {
     if (!user || !supabase) return;
-
     const channel = supabase
       .channel("resenha-chat")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "resenha" },
-        (payload) => {
-          const nova = payload.new;
-          if (!nova || !nova.id) return;
-          setMessages((prev) => {
-            // Evita duplicar mensagem pelo ID real do banco
-            if (prev.some((m) => m.id === nova.id)) return prev;
-            return [...prev, nova];
-          });
-        }
-      )
-      .subscribe((status) => {
-        if (status === "CHANNEL_ERROR") {
-          console.error("Erro na inscrição do Realtime da resenha.");
-        }
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "resenha" }, (payload) => {
+        const nova = payload.new;
+        if (!nova?.id) return;
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === nova.id)) return prev;
+          return [...prev, nova];
+        });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [user, supabase]);
 
-  // Rolar para o fundo sempre que novas mensagens chegarem
+  // Scroll para o fundo a cada nova mensagem
+  const scrollToBottom = useCallback((behavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
+  }, []);
+
   useEffect(() => {
-    if (!fetching) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, fetching]);
+    if (!fetching) scrollToBottom(messages.length <= 3 ? "instant" : "smooth");
+  }, [messages, fetching, scrollToBottom]);
 
   if (loading || !user) return <Splash />;
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
+  const handleSend = async (e) => {
+    e?.preventDefault();
     const texto = inputText.trim();
     if (!texto || sending) return;
-
     setSending(true);
-
     try {
       const { error } = await supabase.from("resenha").insert({
         user_name: apelido || "Participante",
         mensagem: texto,
       });
-
-      if (error) {
-        // Alert para diagnóstico caso o Supabase rejeite
-        alert(`Erro ao enviar mensagem:\nCódigo: ${error.code}\nDetalhe: ${error.message}`);
-        return;
-      }
-
-      // Só limpa o input após o insert bem-sucedido
-      setInputText("");
-    } catch (err) {
-      console.error("Erro inesperado ao enviar:", err);
-      alert(`Erro inesperado: ${err.message}`);
+      if (!error) setInputText("");
     } finally {
       setSending(false);
+      inputRef.current?.focus();
     }
   };
 
-  const formatTime = (isoString) => {
-    if (!isoString) return "";
+  const formatTime = (iso) => {
+    if (!iso) return "";
     try {
-      return new Date(isoString).toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
+      return new Date(iso).toLocaleTimeString("pt-BR", {
+        hour: "2-digit", minute: "2-digit",
         timeZone: "America/Sao_Paulo",
       });
-    } catch {
-      return "";
-    }
+    } catch { return ""; }
   };
 
+  // Agrupa mensagens consecutivas do mesmo usuário
+  const groupedMessages = messages.map((msg, i) => ({
+    ...msg,
+    isFirst: i === 0 || messages[i - 1].user_name !== msg.user_name,
+    isLast:  i === messages.length - 1 || messages[i + 1].user_name !== msg.user_name,
+  }));
+
   return (
-    <div
-      className="min-h-screen relative"
-      style={{ width: "100%", maxWidth: "100vw", overflowX: "hidden" }}
-    >
+    <div className="flex flex-col relative" style={{ height: "100dvh", maxHeight: "100dvh" }}>
       <BgFx />
 
-      {/* Conteúdo principal com padding-bottom para o input fixo + BottomNav */}
-      <div
-        className="relative mx-auto px-4"
-        style={{ maxWidth: "768px", paddingBottom: "180px" }}
+      {/* ── HEADER FIXO (estilo WhatsApp) ─────────────────────────── */}
+      <header
+        className="relative z-20 flex items-center gap-3 px-4 py-3 border-b border-white/8 shrink-0"
+        style={{
+          background: "rgba(10,8,22,0.92)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+        }}
       >
-        <PageHeader
-          title="Resenha da Copa"
-          sub="O espaço oficial para cornetar os palpites e zoar a galera"
-          icon={<MessageSquare size={22} strokeWidth={2.5} />}
-        />
-
-        {/* Card do Chat */}
-        <div
-          className="glass-panel rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden"
-          style={{ width: "100%" }}
+        <Link
+          href="/jogos"
+          className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-white/60 hover:text-white transition-all duration-200 shrink-0"
         >
-          {/* Luzes decorativas */}
-          <div className="absolute -top-16 -right-16 w-40 h-40 bg-lime-500/[0.04] rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-emerald-500/[0.04] rounded-full blur-3xl pointer-events-none" />
+          <Home size={16} />
+        </Link>
 
-          {/* Área de mensagens */}
-          {fetching ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3 text-white/40">
-              <Loader2 className="animate-spin text-lime-400" size={28} />
-              <span className="text-xs font-bold uppercase tracking-wider">
-                Carregando a resenha...
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-lime-400 to-emerald-500 flex items-center justify-center shrink-0 shadow-lg shadow-lime-400/20">
+          <MessageSquare size={18} strokeWidth={2.5} className="text-[#07060f]" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="font-display text-white text-base leading-none">Resenha da Copa ⚽</p>
+          <p className="text-[11px] text-lime-400/80 font-medium mt-0.5 truncate">
+            {fetching ? "carregando..." : `${messages.length} mensagem${messages.length !== 1 ? "s" : ""}`}
+          </p>
+        </div>
+
+        {/* Avatar do usuário logado */}
+        <img
+          src={`/avatares/${avatar || "1889-hamster2.png"}`}
+          alt={apelido}
+          className="w-9 h-9 rounded-full border-2 border-lime-400/30 object-cover bg-[#0a0816] shrink-0"
+        />
+      </header>
+
+      {/* ── ÁREA DE MENSAGENS — preenche todo o espaço disponível ─── */}
+      <div
+        ref={messagesAreaRef}
+        className="relative flex-1 overflow-y-auto overflow-x-hidden"
+        style={{ paddingBottom: `${BOTTOM_OFFSET}px` }}
+      >
+        {fetching ? (
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-white/40">
+            <Loader2 className="animate-spin text-lime-400" size={28} />
+            <span className="text-xs font-bold uppercase tracking-wider">Carregando a resenha...</span>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center px-8 gap-3">
+            <div className="text-5xl select-none">💬</div>
+            <p className="text-sm font-bold text-white/70">Nenhuma mensagem ainda</p>
+            <p className="text-xs text-white/35 leading-relaxed">
+              Seja o primeiro a mandar mensagem! A resenha fica salva por 24h.
+            </p>
+          </div>
+        ) : (
+          <div className="px-3 pt-4 space-y-1">
+            {/* Marcador de data/aviso */}
+            <div className="flex justify-center mb-4">
+              <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest bg-white/5 py-1.5 px-4 rounded-full border border-white/5 select-none">
+                📅 Mensagens expiram em 24h
               </span>
             </div>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-              <div className="text-5xl mb-4 select-none">💬</div>
-              <h3 className="text-sm font-bold text-white/80 uppercase tracking-wide">
-                Nenhuma conversa ainda
-              </h3>
-              <p className="text-xs text-white/40 max-w-xs mt-2 leading-relaxed">
-                Seja o primeiro a mandar mensagem! A resenha fica salva por 24h.
-              </p>
-            </div>
-          ) : (
-            <div
-              className="p-4"
-              style={{ overflowY: "auto", maxHeight: "60vh" }}
-            >
-              {/* Aviso de expiração */}
-              <div className="text-center mb-4">
-                <span className="text-[10px] text-white/25 font-bold uppercase tracking-widest bg-white/5 py-1 px-3 rounded-full select-none">
-                  Mensagens expiram em 24h
-                </span>
-              </div>
 
-              {/* Lista de mensagens */}
-              <div className="space-y-3">
-                {messages.map((msg) => {
-                  const isMe = msg.user_name === apelido;
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        style={{ maxWidth: "80%", wordBreak: "break-word" }}
-                        className={`px-4 py-3 rounded-2xl border shadow-md ${
-                          isMe
-                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-100 rounded-tr-sm"
-                            : "bg-white/5 border-white/5 text-white rounded-tl-sm"
-                        }`}
-                      >
-                        {/* Nome do remetente (apenas para outros) */}
-                        {!isMe && (
-                          <div className="text-lime-400 font-extrabold text-[10px] mb-1.5 uppercase tracking-wider">
-                            {msg.user_name}
-                          </div>
-                        )}
-                        {/* Texto da mensagem */}
-                        <p className="text-sm leading-relaxed whitespace-pre-line">
-                          {msg.mensagem}
-                        </p>
-                        {/* Horário */}
-                        <div className="text-[9px] text-white/30 mt-1.5 text-right font-mono">
-                          {formatTime(msg.created_at)}
+            {groupedMessages.map((msg) => {
+              const isMe = msg.user_name === apelido;
+              return (
+                <div
+                  key={msg.id}
+                  className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"} ${msg.isFirst ? "mt-3" : "mt-0.5"}`}
+                >
+                  {/* Avatar do remetente (apenas para outros, na última mensagem do grupo) */}
+                  {!isMe && (
+                    <div className="w-7 shrink-0 self-end mb-0.5">
+                      {msg.isLast ? (
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500/40 to-blue-500/40 border border-white/10 flex items-center justify-center text-[10px] font-extrabold text-white uppercase select-none">
+                          {msg.user_name?.[0] ?? "?"}
                         </div>
-                      </div>
+                      ) : null}
                     </div>
-                  );
-                })}
-              </div>
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </div>
+                  )}
+
+                  {/* Balão da mensagem */}
+                  <div
+                    style={{ maxWidth: "78%", wordBreak: "break-word" }}
+                    className={`relative px-3.5 py-2.5 shadow-md ${
+                      isMe
+                        ? `bg-gradient-to-br from-lime-500/20 to-emerald-500/15 border border-lime-400/15 text-white ${msg.isFirst ? "rounded-t-2xl" : "rounded-2xl"} rounded-bl-2xl ${msg.isLast ? "rounded-br-sm" : "rounded-br-2xl"}`
+                        : `bg-white/[0.07] border border-white/8 text-white ${msg.isFirst ? "rounded-t-2xl" : "rounded-2xl"} rounded-br-2xl ${msg.isLast ? "rounded-bl-sm" : "rounded-bl-2xl"}`
+                    }`}
+                  >
+                    {/* Nome (apenas na 1ª msg do grupo, para outros) */}
+                    {!isMe && msg.isFirst && (
+                      <p className="text-lime-400 font-extrabold text-[10px] mb-1 uppercase tracking-wider leading-none">
+                        {msg.user_name}
+                      </p>
+                    )}
+
+                    <p className="text-sm leading-relaxed whitespace-pre-line">{msg.mensagem}</p>
+
+                    {/* Horário + checkmarks estilo WhatsApp */}
+                    <div className={`flex items-center gap-1 mt-1 ${isMe ? "justify-end" : "justify-start"}`}>
+                      <span className="text-[9px] text-white/30 font-mono">{formatTime(msg.created_at)}</span>
+                      {isMe && (
+                        <svg width="14" height="10" viewBox="0 0 14 10" className="text-lime-400/60 shrink-0">
+                          <path d="M1 5l3 3 5-7" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M5 5l3 3 5-7" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div ref={messagesEndRef} className="h-1" />
+          </div>
+        )}
       </div>
 
-      {/* Barra de digitação — fixada acima do BottomNav, ocupa 100% da largura */}
+      {/* ── INPUT FIXO ACIMA DO BOTTOMNAV ─────────────────────────── */}
       <div
-        className="fixed z-20"
-        style={{ bottom: "80px", left: 0, right: 0 }}
+        className="fixed z-20 left-0 right-0"
+        style={{ bottom: "72px" }}
       >
-        <div className="px-4 mx-auto" style={{ maxWidth: "768px" }}>
-          <form
-            onSubmit={handleSendMessage}
-            className="flex gap-2 rounded-2xl border border-white/10 p-2"
-            style={{
-              background: "rgba(10,8,22,0.95)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              boxShadow: "0 -8px 32px rgba(0,0,0,0.6)",
-            }}
-          >
+        <div
+          className="px-3 py-2 border-t border-white/8"
+          style={{
+            background: "rgba(10,8,22,0.96)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+          }}
+        >
+          <form onSubmit={handleSend} className="flex items-center gap-2 max-w-3xl mx-auto">
             <input
+              ref={inputRef}
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) handleSendMessage(e);
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
               }}
               placeholder="Manda a resenha aqui... 🔥"
               maxLength={300}
               autoComplete="off"
-              className="flex-1 bg-white/5 border border-white/5 focus:border-lime-400/50 focus:ring-1 focus:ring-lime-400/20 rounded-xl px-4 text-sm text-white placeholder-white/30 focus:outline-none transition-all duration-200"
-              style={{ minHeight: "44px" }}
               disabled={sending}
+              className="flex-1 bg-white/8 border border-white/10 focus:border-lime-400/50 focus:ring-1 focus:ring-lime-400/20 rounded-2xl px-4 text-sm text-white placeholder-white/30 focus:outline-none transition-all duration-200"
+              style={{ height: "44px" }}
             />
             <button
               type="submit"
               disabled={!inputText.trim() || sending}
-              className="bg-gradient-to-r from-lime-400 to-emerald-500 text-[#07060f] font-bold rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 hover:brightness-110 active:scale-95 disabled:opacity-30 disabled:pointer-events-none shadow-lg"
-              style={{ width: "48px", height: "44px" }}
-              title="Enviar"
+              className="w-11 h-11 bg-gradient-to-r from-lime-400 to-emerald-500 text-[#07060f] font-bold rounded-full flex items-center justify-center shrink-0 transition-all duration-200 hover:brightness-110 active:scale-90 disabled:opacity-30 disabled:pointer-events-none shadow-lg shadow-lime-400/20"
             >
-              {sending ? (
-                <Loader2 className="animate-spin" size={18} />
-              ) : (
-                <Send size={18} strokeWidth={2.5} />
-              )}
+              {sending ? <Loader2 className="animate-spin" size={17} /> : <Send size={17} strokeWidth={2.5} />}
             </button>
           </form>
         </div>
