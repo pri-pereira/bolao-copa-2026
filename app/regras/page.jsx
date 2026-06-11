@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useApp } from "../providers";
 import { BottomNav, PageHeader } from "../components";
 import { BgFx, Splash } from "../page";
-import { BookOpen, Trophy, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { BookOpen, Trophy, Clock, CheckCircle2, AlertTriangle, Coins } from "lucide-react";
 
 export default function RegrasPage() {
   const { user, loading } = useApp();
@@ -25,6 +25,39 @@ export default function RegrasPage() {
         />
 
         <div className="space-y-6">
+          {/* Card Premiação */}
+          <div className="glass-panel rounded-3xl p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/[0.02] rounded-full blur-2xl pointer-events-none" />
+            <h2 className="font-display text-xl text-yellow-400 mb-4 flex items-center gap-2">
+              <Coins size={20} className="text-yellow-400" />
+              Premiação Máxima (Valor Integral)
+            </h2>
+            <div className="space-y-4">
+              <p className="text-sm text-white/80 font-medium">
+                Aqui não tem taxa administrativa!
+              </p>
+              <div className="flex items-start gap-3.5 bg-yellow-400/5 border border-yellow-400/15 rounded-2xl p-4">
+                <div className="text-2xl select-none">🏆</div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-yellow-300 uppercase tracking-wide">O vencedor leva 100%!</h3>
+                  <p className="text-xs text-white/70 mt-1 leading-relaxed">
+                    O prêmio final será o valor integral equivalente ao número total de participantes × R$ 10,00. Quanto mais gente da fábrica entrar, maior será a bolada!
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3.5 bg-white/5 border border-white/5 rounded-2xl p-4">
+                <div className="text-2xl select-none">🤝</div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-white/90 uppercase tracking-wide">Regra de Empate</h3>
+                  <p className="text-xs text-white/70 mt-1 leading-relaxed">
+                    Se a Copa terminar e houver empate na liderança do ranking, o valor total acumulado será dividido igualmente entre os primeiros colocados.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Card Sistema de Pontos */}
           <div className="glass-panel rounded-3xl p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-lime-500/[0.02] rounded-full blur-2xl pointer-events-none" />

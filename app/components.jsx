@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Goal, ListOrdered, ShieldCheck, LogOut, BookOpen, Clock, X, Sun, Moon, Home } from "lucide-react";
+import { Goal, ListOrdered, ShieldCheck, LogOut, BookOpen, Clock, X, Sun, Moon, Home, Users } from "lucide-react";
 import { useApp } from "./providers";
 
 export function BottomNav() {
@@ -11,6 +11,7 @@ export function BottomNav() {
 
   const tabs = [
     { href: "/jogos",   label: "Início",  icon: Home },
+    { href: "/palpites", label: "Palpites", icon: Users },
     { href: "/ranking", label: "Ranking", icon: ListOrdered },
     { href: "/regras",  label: "Regras",  icon: BookOpen },
     ...(profile?.is_admin ? [{ href: "/admin", label: "Admin", icon: ShieldCheck }] : []),
