@@ -56,10 +56,32 @@ create policy "profiles_update" on public.profiles for update using (auth.uid() 
 -- Matches: qualquer um lê; só admin escreve (via service role no servidor)
 create policy "matches_select" on public.matches for select using (true);
 
--- Picks: qualquer um lê (pra ranking); só o próprio usuário cria/altera
-create policy "picks_select" on public.picks for select using (true);
-create policy "picks_insert" on public.picks for insert with check (auth.uid() = profile_id);
-create policy "picks_update" on public.picks for update using (auth.uid() = profile_id);
+-- Picks: SELECT (Ver palpites)
+-- Você pode ver seus próprios palpites sempre, OU os palpites de todos se o jogo já começou há 10 minutos
+create policy "picks_select" on public.picks for select using (
+  auth.uid() = profile_id 
+  OR (
+    (select match_datetime from public.matches where id = match_id) <= (now() - interval '10 minutes')
+  )
+);
+
+-- Picks: INSERT (Criar palpite)
+-- Só pode criar se faltar mais de 30 minutos para o jogo começar
+create policy "picks_insert" on public.picks for insert with check (
+  auth.uid() = profile_id 
+  AND (
+    (select match_datetime from public.matches where id = match_id) > (now() + interval '30 minutes')
+  )
+);
+
+-- Picks: UPDATE (Alterar palpite)
+-- Só pode alterar se faltar mais de 30 minutos para o jogo começar
+create policy "picks_update" on public.picks for update using (
+  auth.uid() = profile_id 
+  AND (
+    (select match_datetime from public.matches where id = match_id) > (now() + interval '30 minutes')
+  )
+);
 
 -- ============================================================
 -- Trigger: criar profile automaticamente após signup
