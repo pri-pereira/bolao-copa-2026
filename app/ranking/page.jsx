@@ -20,7 +20,7 @@ export default function RankingPage() {
     if (!user) return;
 
     const [{ data: profiles }, { data: picks }, { data: matches }] = await Promise.all([
-      supabase.from("profiles").select("*"),
+      supabase.from("profiles").select("*").eq("pix_aprovado", true),
       supabase.from("picks").select("*"),
       supabase.from("matches").select("*"),
     ]);
