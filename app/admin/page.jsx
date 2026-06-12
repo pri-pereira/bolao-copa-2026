@@ -116,14 +116,29 @@ export default function AdminPage() {
   };
 
   // ---- Atualizar placar manualmente ----
-  const setScore = async (id, field, val) => {
-    await supabase.from("matches").update({ [field]: val === "" ? null : Number(val) }).eq("id", id);
+  const setScore = (id, field, val) => {
     setMatches((prev) => prev.map((m) => m.id === id ? { ...m, [field]: val === "" ? null : Number(val) } : m));
   };
 
-  const setFinished = async (id, finished) => {
-    await supabase.from("matches").update({ finished }).eq("id", id);
-    setMatches((prev) => prev.map((m) => m.id === id ? { ...m, finished } : m));
+  const setFinished = async (id) => {
+    const m = matches.find((x) => x.id === id);
+    if (!m) return;
+    setBusy(true);
+    setLog(`Encerrando jogo ${m.team_a} x ${m.team_b}...`);
+    
+    const { error } = await supabase.from("matches").update({ 
+      score_a: m.score_a ?? 0, 
+      score_b: m.score_b ?? 0, 
+      finished: true 
+    }).eq("id", id);
+    
+    if (error) {
+      setLog("Erro ao encerrar jogo: " + error.message);
+    } else {
+      setMatches((prev) => prev.map((x) => x.id === id ? { ...x, score_a: m.score_a ?? 0, score_b: m.score_b ?? 0, finished: true } : x));
+      setLog(`Jogo ${m.team_a} x ${m.team_b} encerrado manualmente! O Ranking foi atualizado.`);
+    }
+    setBusy(false);
   };
 
   const removeMatch = async (id) => {
@@ -267,8 +282,8 @@ export default function AdminPage() {
                         <input type="number" min="0" placeholder="?" value={m.score_b ?? ""}
                           onChange={(e) => setScore(m.id, "score_b", e.target.value)}
                           className="w-12 h-9 text-center text-lime-400 font-display text-lg p-0 border border-white/10 focus:border-lime-400" />
-                        <button onClick={() => setFinished(m.id, !m.finished)}
-                          className={`text-[11px] px-3 py-2 rounded-xl font-bold uppercase tracking-wider transition ${m.finished ? "bg-lime-400 text-[#07060f]" : "bg-white/5 text-white/50 hover:bg-white/10 border border-white/5 hover:text-white"}`}>
+                        <button onClick={() => setFinished(m.id)} disabled={m.finished || busy}
+                          className={`text-[11px] px-3 py-2 rounded-xl font-bold uppercase tracking-wider transition ${m.finished ? "bg-lime-400 text-[#07060f] opacity-80 cursor-default" : "bg-white/5 text-white/50 hover:bg-white/10 border border-white/5 hover:text-white"}`}>
                           {m.finished ? "✔ Fim" : "Encerrar"}
                         </button>
                       </div>

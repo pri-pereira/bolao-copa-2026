@@ -146,10 +146,16 @@ export async function GET(request) {
         const apiHome = fixture.teams.home.name;
         const apiAway = fixture.teams.away.name;
 
-        match = pending.find((m) => 
-          m.team_a.toLowerCase() === apiHome.toLowerCase() &&
-          m.team_b.toLowerCase() === apiAway.toLowerCase()
-        );
+        const isFlexMatch = (dbName, apiN) => {
+          const d = dbName.toLowerCase();
+          const a = apiN.toLowerCase();
+          if (d === a) return true;
+          if (d.includes("korea") && a.includes("korea")) return true;
+          if (d.includes("czech") && a.includes("czech")) return true;
+          return d.includes(a) || a.includes(d);
+        };
+
+        match = pending.find((m) => isFlexMatch(m.team_a, apiHome) && isFlexMatch(m.team_b, apiAway));
       }
 
       if (!match) continue;
