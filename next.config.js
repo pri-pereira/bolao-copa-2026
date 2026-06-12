@@ -6,5 +6,7 @@ const withSerwist = require("@serwist/next").default({
   reloadOnOnline: false,
 });
 
-const nextConfig = {};
+const nextConfig = {
+  turbopack: {},
+};
 module.exports = withSerwist(nextConfig);
