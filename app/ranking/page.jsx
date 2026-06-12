@@ -29,19 +29,47 @@ export default function RankingPage() {
   const loadRanking = useCallback(async () => {
     if (!user) return;
 
+    // 1. LÊ DADOS DO SUPABASE (Sempre exibe algo)
     const [{ data: profiles }, { data: picks }, { data: matches }] = await Promise.all([
       supabase.from("profiles").select("*").eq("pix_aprovado", true),
       supabase.from("picks").select("*"),
-      supabase.from("matches").select("*"),
+      supabase.from("matches").select("*").order("match_datetime"),
     ]);
+    
     const sanitizedProfiles = (profiles ?? []).map((p) => ({
       ...p,
       apelido: p.apelido?.includes("@") ? p.apelido.split("@")[0] : p.apelido,
     }));
+    
     const r = computeRanking(sanitizedProfiles, picks ?? [], matches ?? []);
     setRanking(r);
     setFinishedCount((matches ?? []).filter((m) => m.finished).length);
     setFetching(false);
+
+    // 2. GATILHO BACKGROUND DA API OFICIAL
+    // Tenta atualizar resultados pendentes batendo na API para a data de hoje.
+    try {
+      const hojeStr = new Date().toISOString().split('T')[0];
+      const res = await fetch(`/api/matches-official?date=${hojeStr}`, { cache: 'no-store' });
+      if (res.ok) {
+        const apiMatches = await res.json();
+        // Se houver algum jogo finalizado (FT) vindo da API, ele atualizou o Supabase
+        if (apiMatches && apiMatches.length > 0) {
+          const hasFinished = apiMatches.some(m => ["FT", "AET", "PEN"].includes(m.status));
+          if (hasFinished) {
+            // Refetch apenas dos matches e recalcula o ranking
+            const { data: updatedMatches } = await supabase.from("matches").select("*").order("match_datetime");
+            if (updatedMatches) {
+              const r2 = computeRanking(sanitizedProfiles, picks ?? [], updatedMatches);
+              setRanking(r2);
+              setFinishedCount(updatedMatches.filter((m) => m.finished).length);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Erro no gatilho da API oficial no Ranking:", e);
+    }
   }, [user, supabase]);
 
   useEffect(() => { loadRanking(); }, [loadRanking]);

@@ -21,18 +21,41 @@ export default function JogosPage() {
   const loadData = useCallback(async () => {
     if (!user) return;
 
-    // Atualiza as informações do perfil do participante em tempo real a cada refresh de dados para checar status de pix_aprovado
+    // Atualiza as informações do perfil do participante
     await loadProfile(user.id);
 
+    // 1. DADOS LOCAIS (FALLBACK / FAST RENDER)
+    // Lê os dados do Supabase primeiro para garantir que a tela não fique em branco
     const [{ data: ms }, { data: ps }] = await Promise.all([
       supabase.from("matches").select("*").order("match_datetime"),
       supabase.from("picks").select("*").eq("profile_id", user.id),
     ]);
+    
     setMatches(ms ?? []);
     const map = {};
     for (const p of ps ?? []) map[p.match_id] = { score_a: p.score_a, score_b: p.score_b };
     setPicks(map);
     setFetching(false);
+
+    // 2. GATILHO DE ATUALIZAÇÃO EM TEMPO REAL (API-Football)
+    // Busca na API os jogos de hoje. Se algum jogo terminou (FT), a própria rota /api/matches-official vai salvar no Supabase.
+    try {
+      const hojeStr = new Date().toISOString().split('T')[0];
+      const res = await fetch(`/api/matches-official?date=${hojeStr}`, { cache: 'no-store' });
+      if (res.ok) {
+        const apiMatches = await res.json();
+        // Se a API retornou algo e tem jogos finalizados, recarrega os dados do Supabase para atualizar a tela
+        if (apiMatches && apiMatches.length > 0) {
+          const hasFinished = apiMatches.some(m => ["FT", "AET", "PEN"].includes(m.status));
+          if (hasFinished) {
+            const { data: updatedMs } = await supabase.from("matches").select("*").order("match_datetime");
+            if (updatedMs) setMatches(updatedMs);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao sincronizar API em background. Mantendo dados do Supabase.", e);
+    }
   }, [user, supabase, loadProfile]);
 
   useEffect(() => {
