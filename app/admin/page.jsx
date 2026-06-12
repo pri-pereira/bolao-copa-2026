@@ -135,8 +135,27 @@ export default function AdminPage() {
     if (error) {
       setLog("Erro ao encerrar jogo: " + error.message);
     } else {
-      setMatches((prev) => prev.map((x) => x.id === id ? { ...x, score_a: m.score_a ?? 0, score_b: m.score_b ?? 0, finished: true, status: "FT" } : x));
+      setMatches((prev) => prev.map((x) => x.id === id ? { ...x, score_a: m.score_a ?? 0, score_b: m.score_b ?? 0, finished: true } : x));
       setLog(`Jogo ${m.team_a} x ${m.team_b} encerrado manualmente! O Ranking foi atualizado.`);
+    }
+    setBusy(false);
+  };
+
+  const clearFinished = async (id) => {
+    const m = matches.find((x) => x.id === id);
+    if (!m) return;
+    setBusy(true);
+    setLog(`Reabrindo jogo ${m.team_a} x ${m.team_b}...`);
+    
+    const { error } = await supabase.from("matches").update({ 
+      finished: false 
+    }).eq("id", id);
+    
+    if (error) {
+      setLog("Erro ao reabrir jogo: " + error.message);
+    } else {
+      setMatches((prev) => prev.map((x) => x.id === id ? { ...x, finished: false } : x));
+      setLog(`Jogo ${m.team_a} x ${m.team_b} reaberto para edição!`);
     }
     setBusy(false);
   };
@@ -292,9 +311,9 @@ export default function AdminPage() {
                               className="w-12 h-9 text-center text-lime-400 font-display text-lg p-0 border border-white/10 focus:border-lime-400" />
                           </>
                         )}
-                        <button onClick={() => setFinished(m.id)} disabled={m.finished || m.status === "FT" || busy}
-                          className={`text-[11px] px-3 py-2 rounded-xl font-bold uppercase tracking-wider transition ${m.finished || m.status === "FT" ? "bg-lime-400 text-[#07060f] opacity-80 cursor-default" : "bg-white/5 text-white/50 hover:bg-white/10 border border-white/5 hover:text-white"}`}>
-                          {m.finished || m.status === "FT" ? "✔ Fim" : "Encerrar"}
+                        <button onClick={() => m.finished || m.status === "FT" ? clearFinished(m.id) : setFinished(m.id)} disabled={busy}
+                          className={`text-[11px] px-3 py-2 rounded-xl font-bold uppercase tracking-wider transition ${m.finished || m.status === "FT" ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20" : "bg-white/5 text-white/50 hover:bg-white/10 border border-white/5 hover:text-white"}`}>
+                          {m.finished || m.status === "FT" ? "Desfazer" : "Encerrar"}
                         </button>
                       </div>
                     </div>
