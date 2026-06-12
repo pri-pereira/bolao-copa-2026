@@ -13,18 +13,8 @@ export default function RankingPage() {
   const [ranking, setRanking] = useState([]);
   const [finishedCount, setFinishedCount] = useState(0);
   const [fetching, setFetching] = useState(true);
-  const [diag, setDiag] = useState(null);
-  const [diagLoading, setDiagLoading] = useState(true);
 
   useEffect(() => { if (!loading && !user) router.push("/"); }, [user, loading]);
-
-  // Carrega diagnóstico da API
-  useEffect(() => {
-    fetch("/api/diagnostico", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((d) => { setDiag(d); setDiagLoading(false); })
-      .catch((e) => { setDiag({ error: e.message }); setDiagLoading(false); });
-  }, []);
 
   const loadRanking = useCallback(async () => {
     if (!user) return;
@@ -88,45 +78,6 @@ export default function RankingPage() {
           icon={<ListOrdered size={22} strokeWidth={2.5} />}
         />
 
-        {/* ===== PAINEL DE DIAGNÓSTICO TEMPORÁRIO ===== */}
-        <div className="mb-6 p-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/5 text-xs font-mono overflow-auto max-h-80">
-          <p className="text-yellow-400 font-bold text-sm mb-2">🔍 DIAGNÓSTICO (temporário)</p>
-          {diagLoading ? (
-            <p className="text-white/50">Carregando dados da API...</p>
-          ) : diag?.error ? (
-            <p className="text-red-400">❌ Erro: {diag.error}</p>
-          ) : (
-            <>
-              <p className="text-white/60 mb-1">⏱ Timestamp: {diag.timestamp}</p>
-              <p className="text-white/40 mb-1">📡 Fonte: {diag.api_source}</p>
-              <div className="border-t border-white/10 pt-2 mt-2">
-                <p className="text-lime-400 font-bold mb-1">⚽ API-Football:</p>
-                <p className="text-white/70">Total jogos: {diag.api_football?.total_jogos} | Finalizados: {diag.api_football?.finalizados}</p>
-                <p className="text-yellow-300 mt-1 font-bold">🇲🇽 México na API:</p>
-                {typeof diag.api_football?.mexico_raw === "string" ? (
-                  <p className="text-red-400">{diag.api_football.mexico_raw}</p>
-                ) : (
-                  <p className="text-white/80">
-                    {diag.api_football?.mexico_raw?.homeTeam} {diag.api_football?.mexico_raw?.goalsHome ?? "null"} x {diag.api_football?.mexico_raw?.goalsAway ?? "null"} {diag.api_football?.mexico_raw?.awayTeam} — Status: <span className={diag.api_football?.mexico_raw?.status === "FT" ? "text-lime-400" : "text-red-400"}>{diag.api_football?.mexico_raw?.status} ({diag.api_football?.mexico_raw?.statusLong})</span>
-                  </p>
-                )}
-              </div>
-              <div className="border-t border-white/10 pt-2 mt-2">
-                <p className="text-lime-400 font-bold mb-1">🗄 Supabase (banco local):</p>
-                <p className="text-white/70">Total jogos: {diag.supabase_db?.total_jogos} | Finalizados: {diag.supabase_db?.finalizados_no_db} | Pendentes: {diag.supabase_db?.pendentes_no_db}</p>
-                <p className="text-yellow-300 mt-1 font-bold">🇲🇽 México no Supabase:</p>
-                {typeof diag.supabase_db?.mexico_no_db === "string" ? (
-                  <p className="text-red-400">{diag.supabase_db.mexico_no_db}</p>
-                ) : (
-                  <p className="text-white/80">
-                    {diag.supabase_db?.mexico_no_db?.team_a} {diag.supabase_db?.mexico_no_db?.score_a ?? "null"} x {diag.supabase_db?.mexico_no_db?.score_b ?? "null"} {diag.supabase_db?.mexico_no_db?.team_b} — Finished: <span className={diag.supabase_db?.mexico_no_db?.finished ? "text-lime-400" : "text-red-400"}>{String(diag.supabase_db?.mexico_no_db?.finished)}</span>
-                  </p>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-        {/* ===== FIM DO DIAGNÓSTICO ===== */}
 
         {fetching ? (
           <div className="flex justify-center mt-20"><Loader2 className="animate-spin text-lime-400" size={36} /></div>
