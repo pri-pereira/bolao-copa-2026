@@ -5,7 +5,7 @@ import { useApp } from "../providers";
 import { BottomNav, PageHeader } from "../components";
 import { BgFx, Splash } from "../page";
 import { fmtDT, renderFlag } from "@/lib/scoring";
-import { ShieldCheck, Download, Plus, RefreshCw, X, Loader2, Check } from "lucide-react";
+import { ShieldCheck, Plus, X, Loader2, Check } from "lucide-react";
 
 export default function AdminPage() {
   const { user, profile, loading, supabase } = useApp();
@@ -70,36 +70,6 @@ export default function AdminPage() {
     }
   }, [user, profile, loading, router]);
 
-  // ---- Importar tabela da Copa da API-Football ----
-  const importSchedule = async () => {
-    setBusy(true); setLog("Importando tabela da Copa 2026...");
-    try {
-      const res = await fetch("/api/admin/import-schedule", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
-      });
-      const json = await res.json();
-      if (json.error) { setLog("Erro: " + json.error); }
-      else { setLog(`${json.imported} jogos importados!`); await loadMatches(); }
-    } catch (e) { setLog("Erro de conexão: " + e.message); }
-    setBusy(false);
-  };
-
-  // ---- Forçar atualização de resultados ----
-  const forceUpdate = async () => {
-    setBusy(true); setLog("Buscando resultados na API-Football...");
-    try {
-      const res = await fetch("/api/admin/sync-api", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
-      });
-      const json = await res.json();
-      setLog(json.error ? "Erro: " + json.error : json.message);
-      await loadMatches();
-    } catch (e) { setLog("Erro: " + e.message); }
-    setBusy(false);
-  };
-
   // ---- Adicionar jogo manualmente ----
   const addMatch = async () => {
     if (!form.team_a || !form.team_b || !form.match_datetime) {
@@ -120,23 +90,30 @@ export default function AdminPage() {
     setMatches((prev) => prev.map((m) => m.id === id ? { ...m, [field]: val === "" ? null : Number(val) } : m));
   };
 
+  // ---- ENCERRAR JOGO (Gravação manual no Supabase) ----
   const setFinished = async (id) => {
     const m = matches.find((x) => x.id === id);
     if (!m) return;
+
+    const golsA = Number(m.score_a ?? 0);
+    const golsB = Number(m.score_b ?? 0);
+
     setBusy(true);
-    setLog(`Encerrando jogo ${m.team_a} x ${m.team_b}...`);
+    setLog(`Encerrando jogo ${m.team_a} × ${m.team_b}...`);
     
     const { error } = await supabase.from("matches").update({ 
-      score_a: m.score_a ?? 0, 
-      score_b: m.score_b ?? 0, 
-      finished: true
+      score_a: golsA, 
+      score_b: golsB, 
+      finished: true,
+      status: 'FT'
     }).eq("id", id);
     
     if (error) {
       setLog("Erro ao encerrar jogo: " + error.message);
     } else {
-      setMatches((prev) => prev.map((x) => x.id === id ? { ...x, score_a: m.score_a ?? 0, score_b: m.score_b ?? 0, finished: true } : x));
-      setLog(`Jogo ${m.team_a} x ${m.team_b} encerrado manualmente! O Ranking foi atualizado.`);
+      // Atualização imediata do state local
+      setMatches((prev) => prev.map((x) => x.id === id ? { ...x, score_a: golsA, score_b: golsB, finished: true, status: 'FT' } : x));
+      setLog(`✅ Jogo ${m.team_a} ${golsA} × ${golsB} ${m.team_b} encerrado! Ranking atualizado.`);
     }
     setBusy(false);
   };
@@ -145,17 +122,18 @@ export default function AdminPage() {
     const m = matches.find((x) => x.id === id);
     if (!m) return;
     setBusy(true);
-    setLog(`Reabrindo jogo ${m.team_a} x ${m.team_b}...`);
+    setLog(`Reabrindo jogo ${m.team_a} × ${m.team_b}...`);
     
     const { error } = await supabase.from("matches").update({ 
-      finished: false 
+      finished: false,
+      status: null
     }).eq("id", id);
     
     if (error) {
       setLog("Erro ao reabrir jogo: " + error.message);
     } else {
-      setMatches((prev) => prev.map((x) => x.id === id ? { ...x, finished: false } : x));
-      setLog(`Jogo ${m.team_a} x ${m.team_b} reaberto para edição!`);
+      setMatches((prev) => prev.map((x) => x.id === id ? { ...x, finished: false, status: null } : x));
+      setLog(`Jogo ${m.team_a} × ${m.team_b} reaberto para edição!`);
     }
     setBusy(false);
   };
@@ -220,7 +198,7 @@ export default function AdminPage() {
     <div className="min-h-screen relative">
       <BgFx />
       <div className="relative max-w-3xl mx-auto px-4 pb-36">
-        <PageHeader title="Admin" sub="Painel de controle de jogos e resultados" icon={<ShieldCheck size={22} strokeWidth={2.5} />} />
+        <PageHeader title="Admin" sub="Painel de controle manual — jogos e resultados" icon={<ShieldCheck size={22} strokeWidth={2.5} />} />
 
         {/* Alternador de Abas */}
         <div className="flex gap-2 mb-8 bg-white/5 p-1.5 rounded-2xl border border-white/5 relative z-10">
@@ -248,12 +226,6 @@ export default function AdminPage() {
         {/* ABA 1: GERENCIAMENTO DE JOGOS */}
         {activeTab === "jogos" && (
           <>
-            {/* Ações principais */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-8">
-              <ActionBtn icon={<Download size={18} />} label="Importar tabela Copa 2026 da API" color="emerald" onClick={importSchedule} busy={busy} />
-              <ActionBtn icon={<RefreshCw size={18} />} label="🔄 Atualizar Resultados (API-Football)" color="sky" onClick={forceUpdate} busy={busy} />
-            </div>
-
             {/* Adicionar jogo manualmente */}
             <div className="glass-panel rounded-3xl p-5 mb-8 relative overflow-hidden">
               <p className="font-extrabold text-white mb-4 text-sm uppercase tracking-wider text-white/70">Adicionar jogo manualmente</p>
@@ -282,23 +254,32 @@ export default function AdminPage() {
               <div className="space-y-3">
                 <p className="text-[11px] text-white/40 font-extrabold uppercase tracking-wider mb-2 ml-1">{matches.length} jogos cadastrados</p>
                 {matches.map((m) => (
-                  <div key={m.id} className="glass-panel rounded-2xl p-4 border border-white/5 flex flex-col gap-3">
+                  <div key={m.id} className={`glass-panel rounded-2xl p-4 border flex flex-col gap-3 transition-all duration-300 ${m.finished ? "border-lime-400/20 bg-lime-400/[0.02]" : "border-white/5"}`}>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-extrabold text-white flex items-center gap-1.5">
                         {renderFlag(m.flag_a, "w-6 h-4 object-cover rounded shadow-sm inline-block align-middle mr-1.5")} {m.team_a} <span className="text-white/30 text-xs">×</span> {m.team_b} {renderFlag(m.flag_b, "w-6 h-4 object-cover rounded shadow-sm inline-block align-middle ml-1.5")}
                       </span>
-                      <button onClick={() => removeMatch(m.id)} className="text-white/30 hover:text-red-400 transition-colors p-1 hover:bg-white/5 rounded-lg">
-                        <X size={16} />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {m.finished && (
+                          <span className="text-[10px] font-black uppercase tracking-widest text-lime-400 bg-lime-400/10 px-2.5 py-1 rounded-lg border border-lime-400/20 flex items-center gap-1">
+                            ✓ FIM
+                          </span>
+                        )}
+                        {!m.finished && (
+                          <button onClick={() => removeMatch(m.id)} className="text-white/30 hover:text-red-400 transition-colors p-1 hover:bg-white/5 rounded-lg">
+                            <X size={16} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
                       <span className="text-xs text-white/40 font-medium">{fmtDT(m.match_datetime)} {m.group_name ? `• ${m.group_name}` : ""}</span>
                       <div className="flex items-center gap-2">
-                        {m.finished || m.status === "FT" ? (
+                        {m.finished ? (
                           <>
-                            <span className="w-12 h-9 flex items-center justify-center text-lime-400 font-display text-lg bg-white/5 rounded-md border border-white/10">{m.score_a ?? "-"}</span>
+                            <span className="w-12 h-9 flex items-center justify-center text-lime-400 font-display text-lg bg-lime-400/5 rounded-md border border-lime-400/15">{m.score_a ?? "-"}</span>
                             <span className="text-white/20 text-xs font-bold">×</span>
-                            <span className="w-12 h-9 flex items-center justify-center text-lime-400 font-display text-lg bg-white/5 rounded-md border border-white/10">{m.score_b ?? "-"}</span>
+                            <span className="w-12 h-9 flex items-center justify-center text-lime-400 font-display text-lg bg-lime-400/5 rounded-md border border-lime-400/15">{m.score_b ?? "-"}</span>
                           </>
                         ) : (
                           <>
@@ -311,9 +292,9 @@ export default function AdminPage() {
                               className="w-12 h-9 text-center text-lime-400 font-display text-lg p-0 border border-white/10 focus:border-lime-400" />
                           </>
                         )}
-                        <button onClick={() => m.finished || m.status === "FT" ? clearFinished(m.id) : setFinished(m.id)} disabled={busy}
-                          className={`text-[11px] px-3 py-2 rounded-xl font-bold uppercase tracking-wider transition ${m.finished || m.status === "FT" ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20" : "bg-white/5 text-white/50 hover:bg-white/10 border border-white/5 hover:text-white"}`}>
-                          {m.finished || m.status === "FT" ? "Desfazer" : "Encerrar"}
+                        <button onClick={() => m.finished ? clearFinished(m.id) : setFinished(m.id)} disabled={busy}
+                          className={`text-[11px] px-3 py-2 rounded-xl font-bold uppercase tracking-wider transition ${m.finished ? "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20" : "bg-lime-400/10 text-lime-300 hover:bg-lime-400/20 border border-lime-400/20 hover:text-lime-200"}`}>
+                          {m.finished ? "Desfazer" : "Encerrar"}
                         </button>
                       </div>
                     </div>
@@ -427,20 +408,6 @@ export default function AdminPage() {
       </div>
       <BottomNav />
     </div>
-  );
-}
-
-function ActionBtn({ icon, label, color, onClick, busy }) {
-  const colors = {
-    emerald: "bg-lime-400/10 hover:bg-lime-400/20 text-lime-300 border-lime-400/20",
-    sky:     "bg-orange-400/10 hover:bg-orange-400/20 text-orange-300 border-orange-400/20",
-  };
-  return (
-    <button onClick={onClick} disabled={busy}
-      className={`w-full border font-extrabold py-3.5 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 hover:-translate-y-0.5 active:translate-y-0 ${colors[color]}`}>
-      {busy ? <Loader2 className="animate-spin" size={18} /> : icon}
-      {label}
-    </button>
   );
 }
 

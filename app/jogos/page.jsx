@@ -36,26 +36,6 @@ export default function JogosPage() {
     for (const p of ps ?? []) map[p.match_id] = { score_a: p.score_a, score_b: p.score_b };
     setPicks(map);
     setFetching(false);
-
-    // 2. GATILHO DE ATUALIZAÇÃO EM TEMPO REAL (API-Football)
-    // Busca na API os jogos de hoje. Se algum jogo terminou (FT), a própria rota /api/matches-official vai salvar no Supabase.
-    try {
-      const hojeStr = new Date().toISOString().split('T')[0];
-      const res = await fetch(`/api/matches-official?date=${hojeStr}`, { cache: 'no-store' });
-      if (res.ok) {
-        const apiMatches = await res.json();
-        // Se a API retornou algo e tem jogos finalizados, recarrega os dados do Supabase para atualizar a tela
-        if (apiMatches && apiMatches.length > 0) {
-          const hasFinished = apiMatches.some(m => ["FT", "AET", "PEN"].includes(m.status));
-          if (hasFinished) {
-            const { data: updatedMs } = await supabase.from("matches").select("*").order("match_datetime");
-            if (updatedMs) setMatches(updatedMs);
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Erro ao sincronizar API em background. Mantendo dados do Supabase.", e);
-    }
   }, [user, supabase, loadProfile]);
 
   useEffect(() => {
