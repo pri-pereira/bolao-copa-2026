@@ -46,6 +46,7 @@ export async function GET(request) {
       headers: {
         "x-apisports-key": API_KEY,
         "x-rapidapi-key": API_KEY,
+        "x-rapidapi-host": "v3.football.api-sports.io",
         "Cache-Control": "no-cache, no-store, must-revalidate",
         "Pragma": "no-cache",
       },
