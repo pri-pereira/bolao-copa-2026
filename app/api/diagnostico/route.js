@@ -4,60 +4,62 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const APIFOOTBALL_BASE = "https://v3.football.api-sports.io";
+const WC_LEAGUE_ID = 1;
+const WC_SEASON = 2026;
+
 export async function GET() {
-  const API_KEY = process.env.FOOTBALL_DATA_API_KEY;
+  const API_KEY = process.env.APIFOOTBALL_KEY;
 
   if (!API_KEY) {
-    return NextResponse.json({ error: "FOOTBALL_DATA_API_KEY não configurada" }, { status: 500 });
+    return NextResponse.json({ error: "APIFOOTBALL_KEY não configurada" }, { status: 500 });
   }
 
   try {
-    // 1. Busca dados crus da API football-data.org com cache totalmente desabilitado
+    // 1. Busca dados crus da API-Football com cache totalmente desabilitado
     const apiRes = await fetch(
-      "https://api.football-data.org/v4/competitions/WC/matches",
+      `${APIFOOTBALL_BASE}/fixtures?league=${WC_LEAGUE_ID}&season=${WC_SEASON}`,
       {
         method: "GET",
         headers: {
-          "X-Auth-Token": API_KEY,
+          "x-apisports-key": API_KEY,
           "Cache-Control": "no-cache, no-store, must-revalidate",
           "Pragma": "no-cache",
         },
         cache: "no-store",
-        next: { revalidate: 0 },
       }
     );
 
     if (!apiRes.ok) {
       const errText = await apiRes.text();
       return NextResponse.json({
-        error: `API retornou ${apiRes.status}`,
+        error: `API-Football retornou ${apiRes.status}`,
         detalhes: errText,
       }, { status: 500 });
     }
 
     const apiData = await apiRes.json();
-    const allMatches = apiData.matches ?? [];
+    const allFixtures = apiData.response ?? [];
 
-    // Filtra jogos FINISHED da API
-    const finishedFromAPI = allMatches
-      .filter((m) => m.status === "FINISHED")
-      .map((m) => ({
-        id: m.id,
-        homeTeam: m.homeTeam?.name,
-        awayTeam: m.awayTeam?.name,
-        scoreHome: m.score?.fullTime?.home,
-        scoreAway: m.score?.fullTime?.away,
-        status: m.status,
-        utcDate: m.utcDate,
+    // Filtra jogos com status FT (Full Time), AET (After Extra Time), PEN (Penalties)
+    const finishedFromAPI = allFixtures
+      .filter((f) => ["FT", "AET", "PEN"].includes(f.fixture.status.short))
+      .map((f) => ({
+        fixtureId: f.fixture.id,
+        homeTeam: f.teams.home.name,
+        awayTeam: f.teams.away.name,
+        goalsHome: f.goals.home,
+        goalsAway: f.goals.away,
+        status: f.fixture.status.short,
+        statusLong: f.fixture.status.long,
+        date: f.fixture.date,
       }));
 
     // Pega o jogo do México especificamente (se existir)
-    const mexicoGame = allMatches.find(
-      (m) =>
-        m.homeTeam?.name?.toLowerCase().includes("mexico") ||
-        m.awayTeam?.name?.toLowerCase().includes("mexico") ||
-        m.homeTeam?.name?.toLowerCase().includes("méxico") ||
-        m.awayTeam?.name?.toLowerCase().includes("méxico")
+    const mexicoGame = allFixtures.find(
+      (f) =>
+        f.teams.home.name?.toLowerCase().includes("mexico") ||
+        f.teams.away.name?.toLowerCase().includes("mexico")
     );
 
     // 2. Busca dados do Supabase para comparar
@@ -85,18 +87,20 @@ export async function GET() {
 
     return NextResponse.json({
       timestamp: new Date().toISOString(),
-      api_football_data: {
-        total_jogos: allMatches.length,
+      api_source: "API-Football (v3.football.api-sports.io)",
+      api_football: {
+        total_jogos: allFixtures.length,
         finalizados: finishedFromAPI.length,
         jogos_finalizados: finishedFromAPI,
         mexico_raw: mexicoGame
           ? {
-              id: mexicoGame.id,
-              homeTeam: mexicoGame.homeTeam?.name,
-              awayTeam: mexicoGame.awayTeam?.name,
-              scoreHome: mexicoGame.score?.fullTime?.home,
-              scoreAway: mexicoGame.score?.fullTime?.away,
-              status: mexicoGame.status,
+              fixtureId: mexicoGame.fixture.id,
+              homeTeam: mexicoGame.teams.home.name,
+              awayTeam: mexicoGame.teams.away.name,
+              goalsHome: mexicoGame.goals.home,
+              goalsAway: mexicoGame.goals.away,
+              status: mexicoGame.fixture.status.short,
+              statusLong: mexicoGame.fixture.status.long,
             }
           : "NÃO ENCONTRADO NA API",
       },

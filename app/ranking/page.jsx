@@ -72,15 +72,16 @@ export default function RankingPage() {
           ) : (
             <>
               <p className="text-white/60 mb-1">⏱ Timestamp: {diag.timestamp}</p>
+              <p className="text-white/40 mb-1">📡 Fonte: {diag.api_source}</p>
               <div className="border-t border-white/10 pt-2 mt-2">
-                <p className="text-lime-400 font-bold mb-1">📡 API football-data.org:</p>
-                <p className="text-white/70">Total jogos: {diag.api_football_data?.total_jogos} | Finalizados: {diag.api_football_data?.finalizados}</p>
+                <p className="text-lime-400 font-bold mb-1">⚽ API-Football:</p>
+                <p className="text-white/70">Total jogos: {diag.api_football?.total_jogos} | Finalizados: {diag.api_football?.finalizados}</p>
                 <p className="text-yellow-300 mt-1 font-bold">🇲🇽 México na API:</p>
-                {typeof diag.api_football_data?.mexico_raw === "string" ? (
-                  <p className="text-red-400">{diag.api_football_data.mexico_raw}</p>
+                {typeof diag.api_football?.mexico_raw === "string" ? (
+                  <p className="text-red-400">{diag.api_football.mexico_raw}</p>
                 ) : (
                   <p className="text-white/80">
-                    {diag.api_football_data?.mexico_raw?.homeTeam} {diag.api_football_data?.mexico_raw?.scoreHome ?? "null"} x {diag.api_football_data?.mexico_raw?.scoreAway ?? "null"} {diag.api_football_data?.mexico_raw?.awayTeam} — Status: <span className={diag.api_football_data?.mexico_raw?.status === "FINISHED" ? "text-lime-400" : "text-red-400"}>{diag.api_football_data?.mexico_raw?.status}</span>
+                    {diag.api_football?.mexico_raw?.homeTeam} {diag.api_football?.mexico_raw?.goalsHome ?? "null"} x {diag.api_football?.mexico_raw?.goalsAway ?? "null"} {diag.api_football?.mexico_raw?.awayTeam} — Status: <span className={diag.api_football?.mexico_raw?.status === "FT" ? "text-lime-400" : "text-red-400"}>{diag.api_football?.mexico_raw?.status} ({diag.api_football?.mexico_raw?.statusLong})</span>
                   </p>
                 )}
               </div>
