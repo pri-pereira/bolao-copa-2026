@@ -7,21 +7,7 @@ const APIFOOTBALL_BASE = "https://v3.football.api-sports.io";
 const WC_LEAGUE_ID = 1;       // FIFA World Cup
 const WC_SEASON = 2026;
 
-const TEAM_MAP = {
-  "Brasil": "Brazil", "Alemanha": "Germany", "Espanha": "Spain", "Argentina": "Argentina",
-  "França": "France", "Bélgica": "Belgium", "Holanda": "Netherlands", "Inglaterra": "England",
-  "Portugal": "Portugal", "Uruguai": "Uruguay", "Croácia": "Croatia", "México": "Mexico",
-  "Estados Unidos": "USA", "Canadá": "Canada", "Japão": "Japan", "Coreia do Sul": "South Korea",
-  "Austrália": "Australia", "Marrocos": "Morocco", "Senegal": "Senegal", "Gana": "Ghana",
-  "Colômbia": "Colombia", "Equador": "Ecuador", "Suíça": "Switzerland", "Suécia": "Sweden",
-  "Noruega": "Norway", "Áustria": "Austria", "Irã": "Iran", "Arábia Saudita": "Saudi Arabia",
-  "Catar": "Qatar", "Egito": "Egypt", "Turquia": "Turkey", "República Tcheca": "Czech Republic",
-  "Escócia": "Scotland", "África do Sul": "South Africa", "Bósnia & Herzegovina": "Bosnia and Herzegovina",
-  "Haiti": "Haiti", "Paraguai": "Paraguay", "Curaçao": "Curaçao", "Costa do Marfim": "Ivory Coast",
-  "Tunísia": "Tunisia", "Nova Zelândia": "New Zealand", "Cabo Verde": "Cape Verde",
-  "Iraque": "Iraq", "Argélia": "Algeria", "Jordânia": "Jordan", "R. D. do Congo": "DR Congo",
-  "Uzbequistão": "Uzbekistan", "Panamá": "Panama",
-};
+// Dicionário de tradução removido para usar cruzamento direto com a API.
 
 export async function POST(request) {
   const supabase = createClient(
@@ -108,16 +94,13 @@ export async function POST(request) {
           let matchDb = pendingDb.find(m => m.api_fixture_id === fixture.fixture.id);
           
           if (!matchDb) {
+            // Busca direta baseada nos nomes originais (inglês) vindos da API
             const apiHome = fixture.teams.home.name;
             const apiAway = fixture.teams.away.name;
-            matchDb = pendingDb.find(m => {
-              const dbHomeMapped = TEAM_MAP[m.team_a] || m.team_a;
-              const dbAwayMapped = TEAM_MAP[m.team_b] || m.team_b;
-              return (
-                dbHomeMapped.toLowerCase() === apiHome?.toLowerCase() &&
-                dbAwayMapped.toLowerCase() === apiAway?.toLowerCase()
-              );
-            });
+            matchDb = pendingDb.find(m => 
+              m.team_a.toLowerCase() === apiHome.toLowerCase() && 
+              m.team_b.toLowerCase() === apiAway.toLowerCase()
+            );
           }
 
           if (matchDb) {

@@ -136,22 +136,7 @@ export async function GET(request) {
 
     const fixtures = data.response ?? [];
 
-    const TEAM_MAP = {
-      "Brasil": "Brazil", "Alemanha": "Germany", "Espanha": "Spain", "Argentina": "Argentina",
-      "França": "France", "Bélgica": "Belgium", "Holanda": "Netherlands", "Inglaterra": "England",
-      "Portugal": "Portugal", "Uruguai": "Uruguay", "Croácia": "Croatia", "México": "Mexico",
-      "Estados Unidos": "USA", "Canadá": "Canada", "Japão": "Japan", "Coreia do Sul": "South Korea",
-      "Austrália": "Australia", "Marrocos": "Morocco", "Senegal": "Senegal", "Gana": "Ghana",
-      "Colômbia": "Colombia", "Equador": "Ecuador", "Suíça": "Switzerland", "Suécia": "Sweden",
-      "Noruega": "Norway", "Áustria": "Austria", "Irã": "Iran", "Arábia Saudita": "Saudi Arabia",
-      "Catar": "Qatar", "Egito": "Egypt", "Turquia": "Turkey", "República Tcheca": "Czech Republic",
-      "Escócia": "Scotland", "África do Sul": "South Africa", "Bósnia & Herzegovina": "Bosnia and Herzegovina",
-      "Haiti": "Haiti", "Paraguai": "Paraguay", "Curaçao": "Curaçao", "Costa do Marfim": "Ivory Coast",
-      "Tunísia": "Tunisia", "Nova Zelândia": "New Zealand", "Cabo Verde": "Cape Verde",
-      "Iraque": "Iraq", "Argélia": "Algeria", "Jordânia": "Jordan", "R. D. do Congo": "DR Congo",
-      "Uzbequistão": "Uzbekistan", "Panamá": "Panama",
-    };
-
+    // Dicionário de tradução removido para usar cruzamento direto com a API.
     for (const fixture of fixtures) {
       // Tenta encontrar por api_fixture_id primeiro
       let match = pending.find((m) => m.api_fixture_id === fixture.fixture.id);
@@ -161,15 +146,10 @@ export async function GET(request) {
         const apiHome = fixture.teams.home.name;
         const apiAway = fixture.teams.away.name;
 
-        match = pending.find((m) => {
-          const dbHomeMapped = TEAM_MAP[m.team_a] || m.team_a;
-          const dbAwayMapped = TEAM_MAP[m.team_b] || m.team_b;
-
-          return (
-            dbHomeMapped.toLowerCase() === apiHome.toLowerCase() &&
-            dbAwayMapped.toLowerCase() === apiAway.toLowerCase()
-          );
-        });
+        match = pending.find((m) => 
+          m.team_a.toLowerCase() === apiHome.toLowerCase() &&
+          m.team_b.toLowerCase() === apiAway.toLowerCase()
+        );
       }
 
       if (!match) continue;
