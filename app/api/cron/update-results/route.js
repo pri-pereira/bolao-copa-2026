@@ -52,21 +52,88 @@ export async function GET(request) {
     if (dbErr) throw dbErr;
     if (!pending?.length) return Response.json({ updated: 0, message: "Nenhum jogo pendente." });
 
+    // ====== JANELA DE SINCRONIZAÇÃO INTELIGENTE ======
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    const { data: todaysMatches, error: todaysErr } = await supabase
+      .from("matches")
+      .select("match_datetime")
+      .gte("match_datetime", `${todayStr}T00:00:00Z`)
+      .lte("match_datetime", `${todayStr}T23:59:59.999Z`)
+      .order("match_datetime", { ascending: true });
+
+    let shouldFetchApi = true;
+    const currentNow = new Date();
+
+    if (todaysErr) console.error("Erro ao buscar jogos do dia no Supabase:", todaysErr);
+
+    if (!todaysMatches || todaysMatches.length === 0) {
+      console.log("Sincronização pulada: nenhum jogo agendado para hoje.");
+      shouldFetchApi = false;
+    } else {
+      const firstMatchTime = new Date(todaysMatches[0].match_datetime);
+      const lastMatchTime = new Date(todaysMatches[todaysMatches.length - 1].match_datetime);
+      const syncWindowEnd = new Date(lastMatchTime.getTime() + 3 * 60 * 60 * 1000);
+
+      if (currentNow < firstMatchTime || currentNow > syncWindowEnd) {
+        console.log("Sincronização pulada: fora do horário dos jogos de hoje");
+        shouldFetchApi = false;
+      }
+    }
+
+    if (!shouldFetchApi) {
+      return Response.json({ 
+        updated: 0, 
+        message: "Sincronização pulada: fora da janela de jogos de hoje.",
+        checked: pending.length 
+      });
+    }
+    // ====================================================
+
     let updatedCount = 0;
 
-    // 2. Busca jogos finalizados da Copa 2026 na API-Football
-    const res = await fetch(
-      `${APIFOOTBALL_BASE}/fixtures?league=${WC_LEAGUE_ID}&season=${WC_SEASON}&status=FT-AET-PEN`,
-      {
-        headers: {
-          "x-apisports-key": process.env.APIFOOTBALL_KEY,
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          "Pragma": "no-cache",
-        },
-        cache: "no-store",
+    const apiKeys = ['4cbbbc82c570738f983ec67bdbf0b28b', 'e33843a4265d83e977e7890d0b4c880a'];
+    let data = null;
+    let fetchSuccess = false;
+
+    for (let i = 0; i < apiKeys.length; i++) {
+      const apiKey = apiKeys[i];
+      const res = await fetch(
+        `${APIFOOTBALL_BASE}/fixtures?league=${WC_LEAGUE_ID}&season=${WC_SEASON}&status=FT-AET-PEN`,
+        {
+          headers: {
+            "x-apisports-key": apiKey,
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+          },
+          cache: "no-store",
+        }
+      );
+      
+      if (res.status === 429) {
+        console.warn(`Cota da chave ${i + 1} excedida (Status 429). Tentando próxima chave...`);
+        continue;
       }
-    );
-    const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(`Erro na API-Football: ${res.status} ${res.statusText}`);
+      }
+
+      data = await res.json();
+
+      if (data.errors && data.errors.requests) {
+        console.warn(`Cota da chave ${i + 1} excedida (Limite API). Tentando próxima chave...`);
+        continue;
+      }
+
+      fetchSuccess = true;
+      break;
+    }
+
+    if (!fetchSuccess || !data) {
+      throw new Error("Todas as chaves da API-Football excederam o limite de cota.");
+    }
+
     const fixtures = data.response ?? [];
 
     const TEAM_MAP = {

@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
 const APIFOOTBALL_BASE = "https://v3.football.api-sports.io";
 const WC_LEAGUE_ID = 1;       // FIFA World Cup
@@ -24,65 +23,33 @@ const TEAM_MAP = {
   "Uzbequistão": "Uzbekistan", "Panamá": "Panama",
 };
 
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const dateParam = searchParams.get('date');
+export async function POST(request) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  // Autorização do Admin
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.split(" ")[1];
+  
+  if (!token) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+
+  const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+  if (authErr || !user) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (!profileData?.is_admin && user.email !== 'priscillasantosp24@gmail.com') {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
 
   try {
-    // Instancia o cliente do SupabaseAdmin
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-
-    // ====== 1. JANELA DE SINCRONIZAÇÃO INTELIGENTE ======
-    // O parâmetro 'date' normalmente vem como YYYY-MM-DD
-    const todayStr = dateParam || new Date().toISOString().split('T')[0];
-    
-    // Busca os jogos do dia no Supabase
-    const { data: todaysMatches, error: todaysErr } = await supabaseAdmin
-      .from("matches")
-      .select("match_datetime")
-      .gte("match_datetime", `${todayStr}T00:00:00Z`)
-      .lte("match_datetime", `${todayStr}T23:59:59.999Z`)
-      .order("match_datetime", { ascending: true });
-
-    let shouldFetchApi = true;
-    const now = new Date();
-
-    if (todaysErr) {
-      console.error("Erro ao buscar jogos do dia no Supabase:", todaysErr);
-    }
-
-    if (!todaysMatches || todaysMatches.length === 0) {
-      console.log("Sincronização pulada: nenhum jogo agendado para hoje.");
-      shouldFetchApi = false;
-    } else {
-      // Calcula o horário do primeiro e do último jogo
-      const firstMatchTime = new Date(todaysMatches[0].match_datetime);
-      const lastMatchTime = new Date(todaysMatches[todaysMatches.length - 1].match_datetime);
-      
-      // Janela de término = Último Jogo + 3 horas
-      const syncWindowEnd = new Date(lastMatchTime.getTime() + 3 * 60 * 60 * 1000);
-
-      // Condicional de execução
-      if (now < firstMatchTime || now > syncWindowEnd) {
-        console.log("Sincronização pulada: fora do horário dos jogos de hoje");
-        shouldFetchApi = false;
-      }
-    }
-
-    // Se estiver fora da janela, retorna array vazio (o frontend já usa os dados locais do Supabase)
-    if (!shouldFetchApi) {
-      return NextResponse.json([]);
-    }
-    // ====================================================
-
-    let url = `${APIFOOTBALL_BASE}/fixtures?league=${WC_LEAGUE_ID}&season=${WC_SEASON}`;
-    if (dateParam) {
-      url += `&date=${dateParam}`;
-    }
-
+    const url = `${APIFOOTBALL_BASE}/fixtures?league=${WC_LEAGUE_ID}&season=${WC_SEASON}`;
     const apiKeys = ['4cbbbc82c570738f983ec67bdbf0b28b', 'e33843a4265d83e977e7890d0b4c880a'];
     let data = null;
     let fetchSuccess = false;
@@ -123,30 +90,15 @@ export async function GET(request) {
     if (!fetchSuccess || !data) {
       throw new Error("Todas as chaves da API-Football excederam o limite de cota.");
     }
-
+    
     const fixtures = data.response ?? [];
 
-    // Formata o retorno para o client
-    const matches = fixtures.map(item => ({
-      id: item.fixture.id,
-      data: item.fixture.date,
-      timeCasa: item.teams.home.name || 'A definir',
-      timeVisitante: item.teams.away.name || 'A definir',
-      status: item.fixture.status.short,          // "FT", "NS", "1H", "2H", etc.
-      statusLongo: item.fixture.status.long,       // "Match Finished", "Not Started", etc.
-      golsCasa: item.goals.home,
-      golsVisitante: item.goals.away,
-      fase: item.league.round,
-    }));
-
-    // ====== ATUALIZAÇÃO AUTOMÁTICA NO SUPABASE ======
-    // Se a API retornou jogos finalizados, garante que eles estejam atualizados no Supabase.
     const finishedFixtures = fixtures.filter(f => ["FT", "AET", "PEN"].includes(f.fixture.status.short));
-    
-    if (finishedFixtures.length > 0) {
+    let updatedCount = 0;
 
-      // Busca os jogos pendentes no banco local para ver se precisamos atualizar
-      const { data: pendingDb } = await supabaseAdmin
+    if (finishedFixtures.length > 0) {
+      // Pega todos os jogos no banco que ainda não estão finalizados
+      const { data: pendingDb } = await supabase
         .from("matches")
         .select("id, team_a, team_b, api_fixture_id")
         .eq("finished", false);
@@ -169,8 +121,7 @@ export async function GET(request) {
           }
 
           if (matchDb) {
-            // Atualiza no banco!
-            await supabaseAdmin
+            const { error: upErr } = await supabase
               .from("matches")
               .update({ 
                 score_a: fixture.goals.home ?? 0, 
@@ -179,14 +130,20 @@ export async function GET(request) {
                 api_fixture_id: fixture.fixture.id
               })
               .eq("id", matchDb.id);
+              
+            if (!upErr) updatedCount++;
           }
         }
       }
     }
 
-    return NextResponse.json(matches);
+    return NextResponse.json({ 
+      success: true, 
+      message: `${updatedCount} jogos atualizados e marcados como finalizados.`,
+      updatedCount 
+    });
   } catch (error) {
-    console.error("Erro ao carregar jogos na API Route:", error);
+    console.error("Erro no sync manual da API:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

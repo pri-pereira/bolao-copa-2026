@@ -217,6 +217,15 @@ export default function JogosPage() {
               </div>
             )}
 
+            {/* Banner de Aviso de Nova Regra */}
+            <div className="mb-6 p-4 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-200 text-xs font-medium flex items-start gap-3 shadow-lg shadow-sky-500/5">
+              <span className="text-xl mt-0.5 select-none">📢</span>
+              <div className="flex flex-col gap-1">
+                <strong className="text-sky-300 text-[13px] tracking-wide uppercase font-extrabold">Nova Regra de Tempo!</strong>
+                <span className="leading-relaxed opacity-90">O tempo limite para palpitar ou alterar seus palpites mudou. Agora você tem até <b>15 minutos</b> antes do início da partida para salvar suas apostas (antes eram 30 minutos). Aproveite o tempo extra!</span>
+              </div>
+            </div>
+
             {/* Filtro horizontal de Categorias */}
             {matches.length > 0 && (
                <div className="flex gap-2 overflow-x-auto pb-4 mb-2 -mx-4 px-4 select-none scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">

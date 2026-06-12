@@ -89,11 +89,12 @@ export default function AdminPage() {
   const forceUpdate = async () => {
     setBusy(true); setLog("Buscando resultados na API-Football...");
     try {
-      const res = await fetch("/api/cron/update-results", {
+      const res = await fetch("/api/admin/sync-api", {
+        method: "POST",
         headers: { "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` },
       });
       const json = await res.json();
-      setLog(json.error ? "Erro: " + json.error : `${json.updated ?? 0} resultado(s) atualizado(s).`);
+      setLog(json.error ? "Erro: " + json.error : json.message);
       await loadMatches();
     } catch (e) { setLog("Erro: " + e.message); }
     setBusy(false);
@@ -216,7 +217,7 @@ export default function AdminPage() {
             {/* Ações principais */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-8">
               <ActionBtn icon={<Download size={18} />} label="Importar tabela Copa 2026 da API" color="emerald" onClick={importSchedule} busy={busy} />
-              <ActionBtn icon={<RefreshCw size={18} />} label="Forçar busca de resultados agora" color="sky" onClick={forceUpdate} busy={busy} />
+              <ActionBtn icon={<RefreshCw size={18} />} label="🔄 Atualizar Resultados (API-Football)" color="sky" onClick={forceUpdate} busy={busy} />
             </div>
 
             {/* Adicionar jogo manualmente */}
