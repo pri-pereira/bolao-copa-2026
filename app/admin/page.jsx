@@ -129,8 +129,7 @@ export default function AdminPage() {
     const { error } = await supabase.from("matches").update({ 
       score_a: m.score_a ?? 0, 
       score_b: m.score_b ?? 0, 
-      finished: true,
-      status: "FT"
+      finished: true
     }).eq("id", id);
     
     if (error) {
