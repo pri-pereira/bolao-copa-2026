@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const APIFOOTBALL_BASE = "https://v3.api-football.com";
+const APIFOOTBALL_BASE = "https://v3.football.api-sports.io";
 const WC_LEAGUE_ID = 1;       // FIFA World Cup
 const WC_SEASON = 2026;
 
