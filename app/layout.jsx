@@ -1,6 +1,7 @@
 import "./globals.css";
 import { AppProvider } from "./providers";
 import { PushPrompt } from "./components/PushPrompt";
+import { RequirePix } from "./components";
 
 export const metadata = {
   title: "COPA 26 — Bolão da Vidros",
@@ -13,8 +14,8 @@ export const metadata = {
     title: "Bolão 2026",
   },
   icons: {
-    icon: "/icon-512x512.png",
-    apple: "/icon-192x192.png",
+    icon: "/logo-copa26.png",
+    apple: "/logo-copa26.png",
   },
 };
 
@@ -23,8 +24,10 @@ export default function RootLayout({ children }) {
     <html lang="pt-BR" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <AppProvider>
-          {children}
-          <PushPrompt />
+          <RequirePix>
+            {children}
+            <PushPrompt />
+          </RequirePix>
         </AppProvider>
       </body>
     </html>

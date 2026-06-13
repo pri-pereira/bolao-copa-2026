@@ -49,32 +49,7 @@ export default function PalpitesPage() {
 
   if (loading || !user) return <Splash />;
 
-  // Validação de Acesso
-  const isAdmin = profile?.is_admin || user?.email === 'priscillasantosp24@gmail.com';
-  const isLiberado = profile?.pix_aprovado === true || isAdmin;
 
-  if (!isLiberado) {
-    return (
-      <div className="min-h-screen relative">
-        <BgFx />
-        <div className="relative max-w-3xl mx-auto px-4 pb-36">
-          <PageHeader 
-            title="Palpites da Galera" 
-            sub="Veja o que os outros participantes apostaram" 
-            icon={<Users size={22} strokeWidth={2.5} />} 
-          />
-          <div className="glass-panel rounded-3xl p-8 border border-white/10 relative overflow-hidden shadow-2xl text-center mt-10 py-12">
-             <div className="mx-auto w-16 h-16 rounded-3xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 flex items-center justify-center mb-6">
-                <span className="text-3xl select-none">🔒</span>
-             </div>
-             <h2 className="font-display text-2xl text-white mb-4">Libere seu acesso!</h2>
-             <p className="text-white/60 text-sm max-w-md mx-auto">Para ver os palpites dos outros participantes, você precisa primeiro ativar o seu Bolão pagando a taxa de inscrição.</p>
-          </div>
-        </div>
-        <BottomNav />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen relative">

@@ -127,68 +127,7 @@ export default function JogosPage() {
           icon={<Goal size={22} strokeWidth={2.5} />} 
         />
 
-        {/* Validação de Acesso: Pix Aprovado (Admin tem passe livre) */}
-        {(() => {
-          const isAdmin = profile?.is_admin || user?.email === 'priscillasantosp24@gmail.com';
-          const isLiberado = profile?.pix_aprovado === true || isAdmin;
 
-          return !isLiberado ? (
-            <div className="glass-panel rounded-3xl p-8 border border-white/10 relative overflow-hidden shadow-2xl animate-fade-in text-center py-12">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/[0.03] rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500/[0.02] rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="mx-auto w-16 h-16 rounded-3xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(234,179,8,0.1)]">
-              <span className="text-3xl select-none">🔒</span>
-            </div>
-            
-            <h2 className="font-display text-2xl sm:text-3xl text-white mb-4 tracking-tight max-w-xl mx-auto leading-tight">
-              🔒 Libere Seus Palpites e Concorra a Prêmios Incríveis!
-            </h2>
-            <p className="text-white/60 text-sm max-w-md mx-auto leading-relaxed font-medium mb-8">
-              Ative seu Bolão agora! Faça um Pix de apenas R$10,00 e garanta sua vaga para mostrar quem entende mais de futebol! Envie o comprovante de pagamento ao administrador e seus palpites serão liberados automaticamente.
-            </p>
-            
-            {/* QR Code Simulado Premium */}
-            <div className="relative w-36 h-36 mx-auto mb-8 bg-white p-3 rounded-2xl border-2 border-lime-400/30 shadow-[0_0_20px_rgba(163,230,53,0.15)] flex items-center justify-center group hover:scale-105 transition-all duration-300">
-              <svg className="w-full h-full text-[#07060f]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <rect x="5" y="5" width="20" height="20" rx="2" strokeWidth="3.5" />
-                <rect x="10" y="10" width="10" height="10" fill="currentColor" />
-                <rect x="75" y="5" width="20" height="20" rx="2" strokeWidth="3.5" />
-                <rect x="80" y="10" width="10" height="10" fill="currentColor" />
-                <rect x="5" y="75" width="20" height="20" rx="2" strokeWidth="3.5" />
-                <rect x="10" y="80" width="10" height="10" fill="currentColor" />
-                <path d="M35 5h10M55 5h10M35 15h25M45 25h15" strokeWidth="3.5" strokeLinecap="round" />
-                <path d="M75 35h20M75 45h10M85 55h10" strokeWidth="3.5" strokeLinecap="round" />
-                <path d="M35 75h10M55 75h25M35 85h30" strokeWidth="3.5" strokeLinecap="round" />
-                <path d="M35 35h5v5h-5z M45 45h12v12H45z M62 35h13v5H62z M35 55h5v15h-5z M55 60h10v5H55z M45 65h5v5h-5z" fill="currentColor" stroke="none" />
-              </svg>
-            </div>
-            
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 max-w-md mx-auto space-y-4">
-              <div className="py-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 block mb-1">Chave Pix</span>
-                <span className="font-display text-xl sm:text-2xl text-lime-400 select-all font-extrabold tracking-wide">12997380773</span>
-              </div>
-              <div className="border-t border-white/5 pt-4">
-                <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText("12997380773");
-                    alert("Chave Pix copiada para a área de transferência!");
-                  }}
-                  className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold py-3.5 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 mx-auto text-xs uppercase tracking-wider shadow-lg shadow-yellow-400/10"
-                >
-                  <Copy size={16} strokeWidth={3} />
-                  Copiar Chave Pix
-                </button>
-              </div>
-            </div>
-            
-            <p className="text-[10px] text-white/35 mt-6 font-bold uppercase tracking-wider">
-              A liberação é manual e costuma levar menos de 10 minutos!
-            </p>
-          </div>
-          ) : (
-          <>
             {/* Alerta de palpites ausentes */}
             {missingPicksCount > 0 && (
               <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-amber-500/5 animate-pulse">
@@ -284,9 +223,7 @@ export default function JogosPage() {
                 </div>
               ))
             )}
-          </>
-          );
-        })()}
+
       </div>
       <BottomNav />
     </div>
