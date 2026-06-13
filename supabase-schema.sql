@@ -66,20 +66,20 @@ create policy "picks_select" on public.picks for select using (
 );
 
 -- Picks: INSERT (Criar palpite)
--- Só pode criar se faltar mais de 30 minutos para o jogo começar
+-- Só pode criar se faltar mais de 15 minutos para o jogo começar
 create policy "picks_insert" on public.picks for insert with check (
   auth.uid() = profile_id 
   AND (
-    (select match_datetime from public.matches where id = match_id) > (now() + interval '30 minutes')
+    (select match_datetime from public.matches where id = match_id) > (now() + interval '15 minutes')
   )
 );
 
 -- Picks: UPDATE (Alterar palpite)
--- Só pode alterar se faltar mais de 30 minutos para o jogo começar
+-- Só pode alterar se faltar mais de 15 minutos para o jogo começar
 create policy "picks_update" on public.picks for update using (
   auth.uid() = profile_id 
   AND (
-    (select match_datetime from public.matches where id = match_id) > (now() + interval '30 minutes')
+    (select match_datetime from public.matches where id = match_id) > (now() + interval '15 minutes')
   )
 );
 
