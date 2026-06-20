@@ -33,6 +33,9 @@ export default function AdminPage() {
   // Rastreia quais jogos tiveram placar salvo com sucesso (para feedback visual)
   const [savedMatches, setSavedMatches] = useState(new Set());
 
+  // Filtro de data
+  const [filterDate, setFilterDate] = useState("all");
+
   // Helper: faz chamadas autenticadas ao backend admin
   const adminFetch = useCallback(async (url, options = {}) => {
     const session = (await supabase.auth.getSession()).data.session;
@@ -359,8 +362,22 @@ export default function AdminPage() {
               <div className="flex justify-center mt-10"><Loader2 className="animate-spin text-lime-400" size={32} /></div>
             ) : (
               <div className="space-y-3">
-                <p className="text-[11px] text-white/40 font-extrabold uppercase tracking-wider mb-2 ml-1">{matches.length} jogos cadastrados</p>
-                {matches.map((m) => {
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white/5 p-3 rounded-2xl border border-white/5 mb-4">
+                  <p className="text-[11px] text-white/40 font-extrabold uppercase tracking-wider ml-1 mb-0">{matches.length} jogos cadastrados</p>
+                  
+                  <select
+                    value={filterDate}
+                    onChange={(e) => setFilterDate(e.target.value)}
+                    className="bg-[#07060f] border border-white/10 text-white text-xs font-bold rounded-xl px-3 py-2 outline-none focus:border-lime-400 transition cursor-pointer"
+                  >
+                    <option value="all">Todas as datas</option>
+                    {Array.from(new Set(matches.map(m => m.match_datetime?.split('T')[0]))).filter(Boolean).sort().map(date => {
+                      const [year, month, day] = date.split('-');
+                      return <option key={date} value={date}>{`${day}/${month}/${year}`}</option>;
+                    })}
+                  </select>
+                </div>
+                {matches.filter(m => filterDate === "all" || m.match_datetime?.startsWith(filterDate)).map((m) => {
                   const isDirty = dirtyMatches.has(m.id);
                   const isSaved = savedMatches.has(m.id);
                   
