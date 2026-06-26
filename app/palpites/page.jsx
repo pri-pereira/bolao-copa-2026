@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useApp } from "../providers";
 import { BottomNav, PageHeader } from "../components";
 import { BgFx, Splash } from "../page";
-import { fmtDT, renderFlag } from "@/lib/scoring";
+import { scorePick, getRandomEmoji, fmtDT, renderFlag } from "@/lib/scoring";
 import { Users, Lock, CalendarDays, Loader2, Info } from "lucide-react";
 
 export default function PalpitesPage() {
@@ -104,17 +104,27 @@ function MatchPalpitesCard({ match, profiles, picks }) {
   const kickoff = kickoffObj.getTime();
   const isRevealed = now >= kickoff + 10 * 60 * 1000;
 
-  // Filtrar palpites deste jogo
-  const validProfiles = profiles.filter(p => p.pix_aprovado === true || p.is_admin === true || p.email === 'priscillasantosp24@gmail.com');
+  const matchPicks = useMemo(() => {
+    const validProfiles = profiles.filter(p => p.pix_aprovado === true || p.is_admin === true || p.email === 'priscillasantosp24@gmail.com');
+    return validProfiles.map(p => {
+      const pick = picks.find(pk => pk.profile_id === p.id && pk.match_id === match.id);
+      const score_a = pick ? pick.score_a : 0;
+      const score_b = pick ? pick.score_b : 0;
+      
+      let emoji = "";
+      const pts = scorePick(pick ? { score_a, score_b } : null, match);
+      if (pts !== null) {
+        emoji = getRandomEmoji(pts);
+      }
 
-  const matchPicks = validProfiles.map(p => {
-    const pick = picks.find(pk => pk.profile_id === p.id && pk.match_id === match.id);
-    return {
-      profile: p,
-      score_a: pick ? pick.score_a : 0,
-      score_b: pick ? pick.score_b : 0
-    };
-  }).sort((a, b) => (a.profile.apelido || "").localeCompare(b.profile.apelido || ""));
+      return {
+        profile: p,
+        score_a,
+        score_b,
+        emoji
+      };
+    }).sort((a, b) => (a.profile.apelido || "").localeCompare(b.profile.apelido || ""));
+  }, [profiles, picks, match]);
 
   return (
     <div className="glass-panel rounded-3xl p-5 relative overflow-hidden">
@@ -154,7 +164,14 @@ function MatchPalpitesCard({ match, profiles, picks }) {
               <div key={mp.profile.id} className="flex items-center justify-between bg-white/5 border border-white/5 p-3 rounded-xl hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-3">
                   <img src={`/avatares/${mp.profile.avatar || "1889-hamster2.png"}`} alt="Avatar" className="w-8 h-8 rounded-full border border-white/10 object-cover bg-[#0a0816]" />
-                  <span className="text-xs font-bold text-white/80">{mp.profile.apelido || "Jogador"}</span>
+                  <span className="text-xs font-bold text-white/80 flex items-center gap-1.5">
+                    {mp.profile.apelido || "Jogador"}
+                    {mp.emoji && (
+                      <span className="text-sm select-none transition-transform hover:scale-125 duration-200" title="Emoji de desempenho para este palpite">
+                        {mp.emoji}
+                      </span>
+                    )}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-lg border border-white/5">
                   <span className="text-lime-400 font-display text-lg leading-none">{mp.score_a}</span>
