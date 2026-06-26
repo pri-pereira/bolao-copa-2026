@@ -112,16 +112,25 @@ function MatchPalpitesCard({ match, profiles, picks }) {
       const score_b = pick ? pick.score_b : 0;
       
       let emoji = "";
+      let statusText = "";
+      let points = null;
+      
       const pts = scorePick(pick ? { score_a, score_b } : null, match);
       if (pts !== null) {
+        points = pts;
         emoji = getRandomEmoji(pts);
+        if (pts === 3) statusText = "cravei! 3+ pontos";
+        else if (pts === 1) statusText = "acertei 1+ ponto";
+        else statusText = "0 pts";
       }
 
       return {
         profile: p,
         score_a,
         score_b,
-        emoji
+        emoji,
+        statusText,
+        points
       };
     }).sort((a, b) => (a.profile.apelido || "").localeCompare(b.profile.apelido || ""));
   }, [profiles, picks, match]);
@@ -164,11 +173,22 @@ function MatchPalpitesCard({ match, profiles, picks }) {
               <div key={mp.profile.id} className="flex items-center justify-between bg-white/5 border border-white/5 p-3 rounded-xl hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-3">
                   <img src={`/avatares/${mp.profile.avatar || "1889-hamster2.png"}`} alt="Avatar" className="w-8 h-8 rounded-full border border-white/10 object-cover bg-[#0a0816]" />
-                  <span className="text-xs font-bold text-white/80 flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-white/80 flex items-center gap-1.5 flex-wrap">
                     {mp.profile.apelido || "Jogador"}
                     {mp.emoji && (
                       <span className="text-sm select-none transition-transform hover:scale-125 duration-200" title="Emoji de desempenho para este palpite">
                         {mp.emoji}
+                      </span>
+                    )}
+                    {mp.statusText && (
+                      <span className={`text-[9px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded ${
+                        mp.points === 3 
+                          ? "bg-lime-400/10 text-lime-300 border border-lime-400/20" 
+                          : mp.points === 1
+                            ? "bg-yellow-400/10 text-yellow-300 border border-yellow-400/20"
+                            : "bg-white/5 text-white/30 border border-white/5"
+                      }`}>
+                        {mp.statusText}
                       </span>
                     )}
                   </span>
