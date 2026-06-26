@@ -7,6 +7,16 @@ import { BgFx, Splash } from "../page";
 import { fmtDT, renderFlag } from "@/lib/scoring";
 import { ShieldCheck, Plus, X, Loader2, Check, Save } from "lucide-react";
 
+function getLocalDateString(isoString) {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  if (isNaN(d.getTime())) return "";
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function AdminPage() {
   const { user, profile, loading, supabase } = useApp();
   const router = useRouter();
@@ -371,13 +381,13 @@ export default function AdminPage() {
                     className="bg-[#07060f] border border-white/10 text-white text-xs font-bold rounded-xl px-3 py-2 outline-none focus:border-lime-400 transition cursor-pointer"
                   >
                     <option value="all">Todas as datas</option>
-                    {Array.from(new Set(matches.map(m => m.match_datetime?.split('T')[0]))).filter(Boolean).sort().map(date => {
+                    {Array.from(new Set(matches.map(m => getLocalDateString(m.match_datetime)))).filter(Boolean).sort().map(date => {
                       const [year, month, day] = date.split('-');
                       return <option key={date} value={date}>{`${day}/${month}/${year}`}</option>;
                     })}
                   </select>
                 </div>
-                {matches.filter(m => filterDate === "all" || m.match_datetime?.startsWith(filterDate)).map((m) => {
+                {matches.filter(m => filterDate === "all" || getLocalDateString(m.match_datetime) === filterDate).map((m) => {
                   const isDirty = dirtyMatches.has(m.id);
                   const isSaved = savedMatches.has(m.id);
                   
