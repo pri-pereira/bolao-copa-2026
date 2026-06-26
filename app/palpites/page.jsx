@@ -119,9 +119,9 @@ function MatchPalpitesCard({ match, profiles, picks }) {
       if (pts !== null) {
         points = pts;
         emoji = getRandomEmoji(pts);
-        if (pts === 3) statusText = "cravei! 3+ pontos";
-        else if (pts === 1) statusText = "acertei 1+ ponto";
-        else statusText = "0 pts";
+        if (pts === 3) statusText = "Cravei! 3+ Pto";
+        else if (pts === 1) statusText = "Acertei 1+ Pto";
+        else statusText = "Errei 0 Pto";
       }
 
       return {
@@ -175,13 +175,8 @@ function MatchPalpitesCard({ match, profiles, picks }) {
                   <img src={`/avatares/${mp.profile.avatar || "1889-hamster2.png"}`} alt="Avatar" className="w-8 h-8 rounded-full border border-white/10 object-cover bg-[#0a0816]" />
                   <span className="text-xs font-bold text-white/80 flex items-center gap-1.5 flex-wrap">
                     {mp.profile.apelido || "Jogador"}
-                    {mp.emoji && (
-                      <span className="text-sm select-none transition-transform hover:scale-125 duration-200" title="Emoji de desempenho para este palpite">
-                        {mp.emoji}
-                      </span>
-                    )}
                     {mp.statusText && (
-                      <span className={`text-[9px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded ${
+                      <span className={`text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded ${
                         mp.points === 3 
                           ? "bg-lime-400/10 text-lime-300 border border-lime-400/20" 
                           : mp.points === 1
@@ -189,6 +184,11 @@ function MatchPalpitesCard({ match, profiles, picks }) {
                             : "bg-white/5 text-white/30 border border-white/5"
                       }`}>
                         {mp.statusText}
+                      </span>
+                    )}
+                    {mp.emoji && (
+                      <span className="text-sm select-none transition-transform hover:scale-125 duration-200" title="Emoji de desempenho para este palpite">
+                        {mp.emoji}
                       </span>
                     )}
                   </span>
