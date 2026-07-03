@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import { computeRanking } from "@/lib/scoring";
 import confetti from "canvas-confetti";
+import KnockoutPopup from "@/app/components/KnockoutPopup";
 const AppCtx = createContext({});
 export const useApp = () => useContext(AppCtx);
 
@@ -209,6 +210,7 @@ export function AppProvider({ children }) {
   return (
     <AppCtx.Provider value={{ user, profile, apelido, avatar, updateAvatar, loading, supabase, signOut, loadProfile, theme, toggleTheme }}>
       {children}
+      <KnockoutPopup />
       {toast && <NotificationToast toast={toast} onClose={() => setToast(null)} />}
     </AppCtx.Provider>
   );
